@@ -79,6 +79,11 @@ def main():
     print(f"train={len(tr)} valid={len(va)} test={len(te)} filas")
     if min(len(tr), len(va), len(te)) == 0:
         raise SystemExit("Alguno de los cortes temporales quedo vacio. Revisa fechas del dataset.")
+    for nombre, d in (("entrenamiento", tr), ("validacion", va), ("prueba", te)):
+        npos = int(d["y"].sum())
+        print(f"  positivos en {nombre}: {npos}")
+        if npos < 50:
+            raise SystemExit(f"El corte de {nombre} tiene solo {npos} positivos: datos incompletos, no se entrena.")
 
     model = xgb.XGBClassifier(
         n_estimators=600, learning_rate=0.05, max_depth=5, min_child_weight=5,

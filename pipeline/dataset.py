@@ -53,7 +53,8 @@ def _future_sum(a: np.ndarray, h: int) -> np.ndarray:
     return out
 
 
-def build(start: str, end: str, horizon: int = HORIZON, neg_frac: float = 0.1, seed: int = 42):
+def build(start: str, end: str, horizon: int = HORIZON, neg_frac: float = 0.1, seed: int = 42,
+          dia_objetivo: str | list | None = None):
     grid = pd.read_parquet(config.PROCESSED / "grid.parquet")[["h3_cell"]]
     cells = sorted(grid["h3_cell"].tolist())
     cidx = {c: i for i, c in enumerate(cells)}
@@ -109,15 +110,25 @@ def build(start: str, end: str, horizon: int = HORIZON, neg_frac: float = 0.1, s
         W[col] = piv.to_numpy(dtype=np.float32)
 
     # --- muestreo
-    rng = np.random.default_rng(seed)
-    valid = ~np.isnan(fut)
-    keep = valid & (y_mat | (rng.random((n_cells, n_days)) < neg_frac))
+    if dia_objetivo is not None:
+        # Modo prediccion: todas las celdas de uno o varios dias. y = -1 si aun no se puede evaluar.
+        objetivos = [dia_objetivo] if isinstance(dia_objetivo, str) else list(dia_objetivo)
+        keep = np.zeros((n_cells, n_days), dtype=bool)
+        for d_obj in objetivos:
+            t = (pd.Timestamp(d_obj) - days[0]).days
+            if not 0 <= t < n_days:
+                raise ValueError(f"dia_objetivo {d_obj} fuera de [{start}, {end}]")
+            keep[:, t] = True
+    else:
+        rng = np.random.default_rng(seed)
+        valid = ~np.isnan(fut)
+        keep = valid & (y_mat | (rng.random((n_cells, n_days)) < neg_frac))
     ri, rj = np.nonzero(keep)
 
     df = pd.DataFrame({
         "h3_cell": np.array(cells)[ri],
         "fecha": days[rj],
-        "y": y_mat[ri, rj].astype(np.int8),
+        "y": np.where(np.isnan(fut[ri, rj]), -1, y_mat[ri, rj]).astype(np.int8),
     })
     df["peso"] = np.where(df["y"] == 1, 1.0, 1.0 / neg_frac).astype(np.float32)
 
@@ -132,7 +143,7 @@ def build(start: str, end: str, horizon: int = HORIZON, neg_frac: float = 0.1, s
     df["fuego_90d"] = f90[ri, rj]
     df["vecinos_7d"] = nsum[ri, rj]
     df["fuego_hist_anual"] = hist[ri, rj]
-    doy = days[rj].dayofyear.to_numpy()
+    doy = days[rj].day_of_year.to_numpy()
     df["doy_sin"] = np.sin(2 * np.pi * doy / 365.25).astype(np.float32)
     df["doy_cos"] = np.cos(2 * np.pi * doy / 365.25).astype(np.float32)
     return df
@@ -145,6 +156,17 @@ def main():
     ap.add_argument("--horizon", type=int, default=HORIZON)
     ap.add_argument("--neg-frac", type=float, default=0.1)
     a = ap.parse_args()
+
+    # Guarda de cobertura: no armar el dataset si la descarga de FIRMS esta incompleta.
+    fe = pd.to_datetime(pd.read_parquet(config.PROCESSED / "focos.parquet", columns=["fecha_utc"])["fecha_utc"])
+    por_anio = fe.dt.year.value_counts().sort_index()
+    print("Focos por anio:", {int(k): int(v) for k, v in por_anio.items()})
+    faltan = [y for y in range(pd.Timestamp(a.start).year, pd.Timestamp(a.end).year + 1)
+              if y not in por_anio.index]
+    if faltan:
+        raise SystemExit(f"Hay anios sin focos: {faltan}. Completa la descarga de FIRMS y repeti harmonize.")
+    if fe.max() < pd.Timestamp(a.end) - pd.Timedelta(days=45):
+        raise SystemExit(f"Los focos terminan el {fe.max().date()}, lejos de --end {a.end}. Descarga incompleta.")
 
     df = build(a.start, a.end, a.horizon, a.neg_frac)
     out = config.PROCESSED / "dataset.parquet"

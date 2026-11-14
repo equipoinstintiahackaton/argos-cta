@@ -71,3 +71,26 @@ def test_finalize_columnas_y_h3():
     assert list(final.columns) == harmonize.COLUMNAS_FINALES
     assert final["h3_cell"].str.len().min() > 0
     assert final["foco_id"].is_unique
+
+
+def test_solo_vegetacion_y_fuentes_fijas():
+    import numpy as np
+
+    from pipeline import harmonize
+
+    # tipo: 0 vegetacion, 1 volcan, NaN (sin dato) se conserva
+    d = pd.DataFrame({"tipo": [0, 1, np.nan, 2]})
+    assert list(harmonize.solo_vegetacion(d)["tipo"].fillna(-1)) == [0.0, -1.0]
+
+    # fuente fija: 150 dias distintos en ~4 anios sobre el mismo bloque + 3 focos sueltos
+    dias = pd.date_range("2018-01-01", periods=1500, freq="D", tz="UTC")[::10]
+    fija = pd.DataFrame({"lat": -26.50 + np.linspace(0, 0.004, len(dias)),
+                         "lon": -67.00, "ts_utc": dias})
+    sueltos = pd.DataFrame({
+        "lat": [-27.0, -27.5, -28.0], "lon": [-65.0, -65.5, -66.0],
+        "ts_utc": pd.to_datetime(["2024-09-01 12:00"] * 3, utc=True),
+    })
+    todo = pd.concat([fija, sueltos], ignore_index=True)
+    filtrado, fijas = harmonize.quitar_fuentes_fijas(todo)
+    assert len(fijas) == 1
+    assert len(filtrado) == 3

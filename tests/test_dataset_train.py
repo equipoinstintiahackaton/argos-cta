@@ -89,3 +89,19 @@ def test_train_corre_de_punta_a_punta(tmp_path, monkeypatch):
     assert set(meta["thresholds"]) == {"medio", "alto", "critico"}
     assert meta["thresholds"]["medio"] <= meta["thresholds"]["alto"] <= meta["thresholds"]["critico"]
     assert (tmp_path / "models" / "argos_xgb.json").exists()
+
+
+def test_ablacion_corre(tmp_path, monkeypatch):
+    from pipeline import ablacion
+
+    monkeypatch.setattr(config, "PROCESSED", tmp_path)
+    rng = np.random.default_rng(1)
+    n = 6000
+    df = pd.DataFrame({c: rng.normal(size=n).astype("float32") for c in dataset.FEATURES})
+    df["fecha"] = pd.to_datetime(rng.choice(pd.date_range("2020-01-01", "2025-06-30"), n))
+    logit = 1.5 * df["vpd_kpa"] - 3.0
+    df["y"] = (rng.random(n) < 1 / (1 + np.exp(-logit))).astype("int8")
+    df["peso"] = np.where(df["y"] == 1, 1.0, 10.0).astype("float32")
+    df["h3_cell"] = "x"
+    df.to_parquet(tmp_path / "dataset.parquet")
+    ablacion.main()

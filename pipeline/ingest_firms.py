@@ -40,7 +40,7 @@ def fetch_window(source: str, start: date, n_days: int, retries: int = 4) -> str
             if r.status_code in (400, 401, 403):
                 raise RuntimeError(f"FIRMS rechazo el pedido ({r.status_code}): {r.text[:200]!r}")
             wait = 2 ** attempt * 5
-            print(f"  HTTP {r.status_code} en {source} {start}, reintento en {wait}s")
+            print(f"  HTTP {r.status_code} en {source} {start}, reintento en {wait}s", flush=True)
         except requests.RequestException as exc:
             wait = 2 ** attempt * 5
             print(f"  Error de red ({exc.__class__.__name__}), reintento en {wait}s")
@@ -48,7 +48,7 @@ def fetch_window(source: str, start: date, n_days: int, retries: int = 4) -> str
     raise RuntimeError(f"No se pudo descargar {source} {start}")
 
 
-def download(source: str, start: date, end: date, pause: float = 0.5) -> int:
+def download(source: str, start: date, end: date, pause: float = 1.0) -> int:
     out_dir = config.RAW_FIRMS / source
     out_dir.mkdir(parents=True, exist_ok=True)
     total_rows = 0
@@ -56,10 +56,30 @@ def download(source: str, start: date, end: date, pause: float = 0.5) -> int:
         target = out_dir / f"{w_start.isoformat()}_{n_days}d.csv"
         if target.exists():
             continue
-        text = fetch_window(source, w_start, n_days)
-        # Respuestas de error de FIRMS vienen como texto sin cabecera de columnas.
-        if not text.lstrip().lower().startswith("latitude"):
-            raise RuntimeError(f"Respuesta inesperada de FIRMS: {text[:200]!r}")
+        text = None
+        for intento in range(6):
+            try:
+                text = fetch_window(source, w_start, n_days)
+                # Respuestas de error de FIRMS vienen como texto sin cabecera de columnas.
+                if not text.lstrip().lower().startswith("latitude"):
+                    raise RuntimeError(f"Respuesta inesperada de FIRMS: {text[:200]!r}")
+                break
+            except RuntimeError as exc:
+                # Al superar el limite de transacciones FIRMS bloquea la clave unos minutos
+                # (responde "Exceeding allowed transaction limit" y luego "Invalid MAP_KEY").
+                bloqueo = "transaction limit" in str(exc) or "Invalid MAP_KEY" in str(exc)
+                text = None
+                if bloqueo and intento < 5:
+                    print(f"  Limite de transacciones en {source} {w_start}: espero 120 s "
+                          f"(intento {intento + 1}/6)", flush=True)
+                    time.sleep(120)
+                    continue
+                # No abortar toda la descarga por una ventana: se registra y se sigue.
+                # Al volver a correr el mismo comando se reintentan solo las que faltan.
+                print(f"  FALLO {source} {w_start}: {exc}", flush=True)
+                break
+        if text is None:
+            continue
         target.write_text(text, encoding="utf-8")
         total_rows += max(0, text.count("\n") - 1)
         time.sleep(pause)

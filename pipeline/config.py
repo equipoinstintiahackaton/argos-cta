@@ -34,3 +34,9 @@ DEDUP_WINDOW_H = 3        # ventana temporal para considerar el mismo evento
 
 # Zona horaria local (Argentina).
 LOCAL_TZ = "America/Argentina/Catamarca"
+
+# Fuentes termicas fijas (instalaciones industriales o mineras, volcanes, etc.):
+# detecciones en el mismo bloque de ~2 km en muchos dias y varios anios. No son incendios.
+STATIC_BIN_DEG = 0.02
+STATIC_MIN_DIAS = 100
+STATIC_MIN_ANIOS = 3

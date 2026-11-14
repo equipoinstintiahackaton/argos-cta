@@ -74,6 +74,8 @@ def normalize(df: pd.DataFrame, instrumento: str) -> pd.DataFrame:
         out["res_m"] = 375
 
     out["frp_mw"] = pd.to_numeric(df["frp"], errors="coerce")
+    # FIRMS: 0 = incendio de vegetacion presunto, 1 = volcan activo, 2 = otra fuente fija, 3 = costa afuera
+    out["tipo"] = pd.to_numeric(df["type"], errors="coerce") if "type" in df.columns else np.nan
     out["instrumento"] = inst
     out["satelite"] = df["satellite"].astype(str)
     out["dia_noche"] = df["daynight"].astype(str).str.upper()
@@ -133,6 +135,37 @@ def deduplicate(df: pd.DataFrame) -> pd.DataFrame:
     return rep
 
 
+def solo_vegetacion(df: pd.DataFrame) -> pd.DataFrame:
+    """Descarta volcanes, fuentes fijas y costa afuera segun la clasificacion de FIRMS."""
+    return df[df["tipo"].isna() | (df["tipo"] == 0)].reset_index(drop=True)
+
+
+def quitar_fuentes_fijas(df: pd.DataFrame):
+    """Quita bloques de ~2 km con detecciones en muchos dias y varios anios.
+
+    Devuelve (df_filtrado, tabla_de_fuentes_fijas). Una quema agricola recurrente suma
+    pocos dias por anio; una instalacion termica fija suma cientos.
+    """
+    vacio = pd.DataFrame(columns=["bl", "bo", "n_dias", "n_anios"])
+    if df.empty:
+        return df, vacio
+    b = config.STATIC_BIN_DEG
+    t = pd.DataFrame({
+        "bl": ((df["lat"] / b).round() * b).round(4),
+        "bo": ((df["lon"] / b).round() * b).round(4),
+        "dia": df["ts_utc"].dt.floor("D"),
+        "anio": df["ts_utc"].dt.year,
+    })
+    g = t.groupby(["bl", "bo"]).agg(n_dias=("dia", "nunique"), n_anios=("anio", "nunique")).reset_index()
+    fijas = g[(g["n_dias"] >= config.STATIC_MIN_DIAS) & (g["n_anios"] >= config.STATIC_MIN_ANIOS)]
+    fijas = fijas.sort_values("n_dias", ascending=False).reset_index(drop=True)
+    if fijas.empty:
+        return df, vacio
+    marca = t.merge(fijas[["bl", "bo"]].assign(fija=True), on=["bl", "bo"], how="left")["fija"]
+    marca = marca.fillna(False).to_numpy(dtype=bool)
+    return df[~marca].reset_index(drop=True), fijas
+
+
 def finalize(df: pd.DataFrame) -> pd.DataFrame:
     if df.empty:
         return pd.DataFrame(columns=COLUMNAS_FINALES)
@@ -163,8 +196,22 @@ def run() -> pd.DataFrame:
         raise SystemExit("No hay CSV crudos en data/raw/firms. Corre primero ingest_firms.")
     todo = pd.concat(partes, ignore_index=True)
     antes = len(todo)
+    todo = solo_vegetacion(todo)
+    print(f"Filtro de tipo FIRMS: {antes - len(todo)} detecciones no-vegetacion descartadas")
+    n_previo = len(todo)
+    todo, fijas = quitar_fuentes_fijas(todo)
+    print(f"Fuentes termicas fijas: {len(fijas)} bloques de ~2 km, {n_previo - len(todo)} detecciones descartadas")
+    if len(fijas):
+        print(fijas.head(8).rename(columns={"bl": "lat", "bo": "lon"}).to_string(index=False))
+        fijas.to_parquet(config.PROCESSED / "fuentes_fijas.parquet", index=False)
     dedup = deduplicate(todo)
     final = finalize(dedup)
+    g = config.PROCESSED / "grid.parquet"
+    if g.exists():
+        celdas = set(pd.read_parquet(g, columns=["h3_cell"])["h3_cell"])
+        dentro = final["h3_cell"].isin(celdas)
+        print(f"Focos fuera de Catamarca (provincias vecinas) descartados: {int((~dentro).sum())}")
+        final = final[dentro].reset_index(drop=True)
     out = config.PROCESSED / "focos.parquet"
     final.to_parquet(out, index=False)
     print(f"Total: {antes} -> {len(final)} focos tras deduplicar. Guardado en {out}")

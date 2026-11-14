@@ -1,0 +1,91 @@
+{
+  "p_anclas": [
+    0.00032815037411637604,
+    0.002052149338407278,
+    0.0038931485242058037,
+    0.008318995331624031,
+    0.01611919728570366,
+    0.024667912506227494,
+    0.031109378153878212,
+    0.08234396531823349
+  ],
+  "q_anclas": [
+    0.0,
+    0.8,
+    0.9,
+    0.95,
+    0.98,
+    0.99,
+    0.995,
+    1.0
+  ],
+  "idx_anclas": [
+    0,
+    20,
+    35,
+    45,
+    60,
+    75,
+    80,
+    100
+  ],
+  "frecuencia_base": 0.0016055779997259378,
+  "tabla_prueba": [
+    {
+      "banda": "verde",
+      "desde": 0,
+      "hasta": 20,
+      "frac_celdas_dia": 0.8064,
+      "frecuencia_observada": 0.0004,
+      "lift": 0.3
+    },
+    {
+      "banda": "amarillo",
+      "desde": 20,
+      "hasta": 35,
+      "frac_celdas_dia": 0.0999,
+      "frecuencia_observada": 0.0018,
+      "lift": 1.1
+    },
+    {
+      "banda": "naranja",
+      "desde": 35,
+      "hasta": 45,
+      "frac_celdas_dia": 0.0515,
+      "frecuencia_observada": 0.0059,
+      "lift": 3.7
+    },
+    {
+      "banda": "naranja_fuerte",
+      "desde": 45,
+      "hasta": 60,
+      "frac_celdas_dia": 0.0239,
+      "frecuencia_observada": 0.0119,
+      "lift": 7.4
+    },
+    {
+      "banda": "rojo",
+      "desde": 60,
+      "hasta": 75,
+      "frac_celdas_dia": 0.0091,
+      "frecuencia_observada": 0.0189,
+      "lift": 11.8
+    },
+    {
+      "banda": "marron",
+      "desde": 75,
+      "hasta": 80,
+      "frac_celdas_dia": 0.0044,
+      "frecuencia_observada": 0.0285,
+      "lift": 17.8
+    },
+    {
+      "banda": "negro",
+      "desde": 80,
+      "hasta": 100,
+      "frac_celdas_dia": 0.0048,
+      "frecuencia_observada": 0.044,
+      "lift": 27.4
+    }
+  ]
+}

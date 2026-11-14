@@ -1,0 +1,35 @@
+{
+  "features": [
+    "temp_c",
+    "temp_max_c",
+    "humedad_pct",
+    "viento_kmh",
+    "precip_mm",
+    "dias_sin_lluvia",
+    "precip_30d",
+    "precip_90d",
+    "temp_7d",
+    "humedad_7d",
+    "vpd_kpa",
+    "temp_anom",
+    "humedad_anom",
+    "fuego_7d",
+    "fuego_30d",
+    "fuego_90d",
+    "vecinos_7d",
+    "fuego_hist_anual",
+    "doy_sin",
+    "doy_cos"
+  ],
+  "thresholds": {
+    "medio": 0.002052148338407278,
+    "alto": 0.008318992331624031,
+    "critico": 0.024667907506227493
+  },
+  "quantiles": {
+    "medio": 0.8,
+    "alto": 0.95,
+    "critico": 0.99
+  },
+  "best_iteration": 50
+}
