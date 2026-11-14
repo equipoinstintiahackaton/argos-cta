@@ -75,6 +75,15 @@ def explicar(valores: pd.Series, contrib: pd.Series, k: int = 3, min_contrib: fl
     return "; ".join(partes) if partes else "combinacion de condiciones y epoca del anio"
 
 
+def ultima_fecha() -> str:
+    """Ultimo dia con focos Y clima disponibles: la situacion mas reciente que se puede calcular.
+    El clima de NASA POWER llega con unos 3 a 5 dias de retraso."""
+    f = pd.to_datetime(pd.read_parquet(config.PROCESSED / "focos.parquet", columns=["fecha_utc"])["fecha_utc"]).max()
+    w = pd.read_parquet(config.PROCESSED / "weather_points.parquet", columns=["fecha", "temp_c"])
+    c = pd.to_datetime(w.loc[w["temp_c"].notna(), "fecha"]).max()
+    return min(f, c).strftime("%Y-%m-%d")
+
+
 def predecir(fecha: str, start: str = "2012-05-01") -> pd.DataFrame:
     meta = json.loads((MODELS / "meta.json").read_text())
     model = xgb.XGBClassifier()
@@ -109,9 +118,12 @@ def predecir(fecha: str, start: str = "2012-05-01") -> pd.DataFrame:
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--fecha", required=True, help="YYYY-MM-DD")
+    ap.add_argument("--fecha", required=True, help="YYYY-MM-DD, o \"ultima\" para la situacion mas reciente")
     a = ap.parse_args()
 
+    if a.fecha == "ultima":
+        a.fecha = ultima_fecha()
+        print(f"Situacion mas reciente calculable: {a.fecha}")
     df = predecir(a.fecha)
     grid = pd.read_parquet(config.PROCESSED / "grid.parquet")[["h3_cell", "lat", "lon"]]
     extra = [c for c in ("indice", "banda") if c in df.columns]

@@ -143,6 +143,17 @@ def cargar_departamentos(conn):
     print(f"departamentos: {len(rows)} cargados, {len(cd)} celdas asignadas")
 
 
+def cargar_condiciones(conn):
+    c = pd.read_parquet(config.PROCESSED / "condiciones_focos.parquet")
+    with conn.cursor() as cur:
+        cur.execute("truncate condiciones_focos")
+        _ejecutar(cur, "insert into condiciones_focos (variable, grupo, n, media, p10, p25, p50, p75, p90) "
+                       "values (%s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                  filas(c[["variable", "grupo", "n", "media", "p10", "p25", "p50", "p75", "p90"]]))
+    conn.commit()
+    print(f"condiciones: {len(c)} filas cargadas")
+
+
 def cargar_riesgo_depto(conn, fecha: str):
     r = pd.read_parquet(config.PROCESSED / f"riesgo_depto_{fecha}.parquet")
     r["fecha"] = pd.to_datetime(r["fecha"]).dt.date
@@ -193,7 +204,7 @@ def cargar_estadisticas(conn):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--que", nargs="+", required=True,
-                    choices=["celdas", "departamentos", "focos", "estadisticas", "riesgo", "riesgo_depto", "alertas"])
+                    choices=["celdas", "departamentos", "focos", "estadisticas", "condiciones", "riesgo", "riesgo_depto", "alertas"])
     ap.add_argument("--fecha", help="YYYY-MM-DD (para riesgo y alertas)")
     a = ap.parse_args()
     if any(k in a.que for k in ("riesgo", "riesgo_depto", "alertas")) and not a.fecha:
@@ -209,6 +220,8 @@ def main():
             cargar_focos(conn)
         if "estadisticas" in a.que:
             cargar_estadisticas(conn)
+        if "condiciones" in a.que:
+            cargar_condiciones(conn)
         if "riesgo" in a.que:
             cargar_riesgo(conn, a.fecha)
         if "riesgo_depto" in a.que:

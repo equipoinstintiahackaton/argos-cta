@@ -46,3 +46,11 @@ html:has(.pagina), body:has(.pagina) { height: auto; }
 .filtro { margin: 8px 0 12px; font-size: 13px; }
 .filtro select { background: #0f1720; color: #e5e7eb; border: 1px solid #334155; border-radius: 6px; padding: 4px 8px; }
 @media (max-width: 800px) { .kpis { grid-template-columns: repeat(2, 1fr); } }
+
+.fechabar { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.fechabar select { background: #0f1720; color: #e5e7eb; border: 1px solid #334155; border-radius: 6px; padding: 4px 8px; font-size: 12px; }
+.etq { font-size: 11px; padding: 3px 8px; border-radius: 10px; font-weight: 600; }
+.etq.actual { background: #16a34a; color: #fff; }
+.etq.hist { background: #334155; color: #e5e7eb; }
+.chk { display: block; font-size: 11px; color: #9ca3af; margin: 4px 0 8px; }
+.rango { display: block; }

@@ -9,7 +9,39 @@ import { traerTodo } from "../../lib/datos";
 type Mensual = { anio: number; mes: number; departamento: string; focos: number; focos_confiables: number; frp_total_mw: number | null; celdas_afectadas: number };
 type Hora = { departamento: string; hora: number; focos: number };
 type Escala = { banda: string; orden: number; frecuencia_observada: number | null; lift: number | null; frac_celdas_dia: number };
+type Cond = { variable: string; grupo: "foco" | "base"; n: number; media: number; p10: number; p25: number; p50: number; p75: number; p90: number };
 type Calib = { banda: string; orden: number; n: number; prometido: number | null; observado: number | null };
+
+const VARS: { id: string; label: string; unidad: string }[] = [
+  { id: "temp_max_c", label: "Temperatura maxima", unidad: "C" },
+  { id: "temp_c", label: "Temperatura media", unidad: "C" },
+  { id: "humedad_pct", label: "Humedad relativa", unidad: "%" },
+  { id: "vpd_kpa", label: "Deficit de vapor (aire seco)", unidad: "kPa" },
+  { id: "viento_kmh", label: "Viento", unidad: "km/h" },
+  { id: "dias_sin_lluvia", label: "Dias sin lluvia", unidad: "dias" },
+  { id: "precip_30d", label: "Lluvia acumulada 30 dias", unidad: "mm" },
+  { id: "precip_90d", label: "Lluvia acumulada 90 dias", unidad: "mm" },
+  { id: "temp_anom", label: "Anomalia de temperatura", unidad: "C" },
+  { id: "humedad_anom", label: "Anomalia de humedad", unidad: "puntos" },
+];
+
+function Rango({ foco, base }: { foco: Cond; base: Cond }) {
+  const lo = Math.min(foco.p10, base.p10), hi = Math.max(foco.p90, base.p90);
+  const W = 260, x = (v: number) => 4 + ((v - lo) / Math.max(1e-9, hi - lo)) * (W - 8);
+  const fila = (c: Cond, y: number, color: string) => (
+    <g>
+      <line x1={x(c.p10)} x2={x(c.p90)} y1={y} y2={y} stroke={color} strokeWidth={2} />
+      <rect x={x(c.p25)} y={y - 6} width={Math.max(2, x(c.p75) - x(c.p25))} height={12} fill={color} opacity={0.55} />
+      <line x1={x(c.p50)} x2={x(c.p50)} y1={y - 8} y2={y + 8} stroke="#fff" strokeWidth={2} />
+    </g>
+  );
+  return (
+    <svg viewBox={`0 0 ${W} 40`} width={W} className="rango">
+      {fila(foco, 10, "#ea580c")}
+      {fila(base, 30, "#64748b")}
+    </svg>
+  );
+}
 
 const MESES = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
 const MESES_LARGO = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
@@ -20,6 +52,7 @@ export default function Estadisticas() {
   const [h, setH] = useState<Hora[]>([]);
   const [escala, setEscala] = useState<Escala[]>([]);
   const [calib, setCalib] = useState<Calib[]>([]);
+  const [cond, setCond] = useState<Cond[]>([]);
   const [depto, setDepto] = useState("Todos");
   const [anioR, setAnioR] = useState<number | null>(null);
   const [mesR, setMesR] = useState(8);
@@ -28,13 +61,14 @@ export default function Estadisticas() {
   useEffect(() => {
     (async () => {
       try {
-        const [a, b, c, d] = await Promise.all([
+        const [a, b, c, d, e5] = await Promise.all([
           traerTodo<Mensual>("stats_mensual", "anio,mes,departamento,focos,focos_confiables,frp_total_mw,celdas_afectadas"),
           traerTodo<Hora>("stats_hora", "departamento,hora,focos"),
           traerTodo<Escala>("escala_bandas", "banda,orden,frecuencia_observada,lift,frac_celdas_dia", [], "orden"),
           traerTodo<Calib>("calibracion_depto", "banda,orden,n,prometido,observado", [], "orden"),
+          traerTodo<Cond>("condiciones_focos", "variable,grupo,n,media,p10,p25,p50,p75,p90"),
         ]);
-        setM(a); setH(b); setEscala(c); setCalib(d);
+        setM(a); setH(b); setEscala(c); setCalib(d); setCond(e5);
         if (a.length) setAnioR(Math.max(...a.map((x) => x.anio)));
       } catch (e: any) { setError(e?.message ?? "Error al leer Supabase"); }
     })();
@@ -110,6 +144,36 @@ export default function Estadisticas() {
         <Barras datos={horas} color="#facc15" />
         <p className="nota">Las horas dependen de los pasos de cada satelite. Sirve para ver el patron, no para fechar el inicio del fuego.</p>
       </section>
+      {cond.length > 0 && (
+        <section className="card">
+          <h2>Condiciones que acompañaron a los focos</h2>
+          <p className="nota">
+            Clima de los dias con focos (naranja) contra dias sin focos de los mismos meses (gris). La barra muestra el rango
+            entre el percentil 10 y 90, la caja entre el 25 y el 75, y la marca blanca la mediana.
+            Si las barras se superponen mucho, esa variable por si sola distingue poco: el modelo las combina con el historial de fuego.
+          </p>
+          <table className="tabla">
+            <thead><tr><th>Variable</th><th>Con foco (mediana)</th><th>Sin foco (mediana)</th><th>Rango</th></tr></thead>
+            <tbody>
+              {VARS.map((v) => {
+                const fo = cond.find((c) => c.variable === v.id && c.grupo === "foco");
+                const ba = cond.find((c) => c.variable === v.id && c.grupo === "base");
+                if (!fo || !ba) return null;
+                const f1 = (x: number) => x.toLocaleString("es-AR", { maximumFractionDigits: 1 });
+                return (
+                  <tr key={v.id}>
+                    <td>{v.label} ({v.unidad})</td>
+                    <td>{f1(fo.p50)}</td><td>{f1(ba.p50)}</td>
+                    <td><Rango foco={fo} base={ba} /></td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          <p className="nota">Dias con foco: {cond[0] ? cond.find((c) => c.grupo === "foco")?.n.toLocaleString("es-AR") : 0}. Clima: NASA POWER (grilla de ~50 km), por lo que describe la region, no el sitio exacto del foco.</p>
+        </section>
+      )}
+
       <section className="card"><h2>Por departamento (historial completo)</h2><Barras datos={porDepto.map((d) => ({ ...d, destacado: d.etiqueta === depto }))} color="#ea580c" alto={190} /></section>
 
       <section className="card">

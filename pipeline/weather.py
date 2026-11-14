@@ -110,7 +110,7 @@ def build_points(grid: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
-def run(start: date, end: date):
+def run(start: date, end: date, incremental: bool = False):
     grid = pd.read_parquet(config.PROCESSED / "grid.parquet")[["h3_cell", "lat", "lon"]]
     cells = build_points(grid)
     cells[["h3_cell", "point_id"]].to_parquet(config.PROCESSED / "cell_point.parquet", index=False)
@@ -122,6 +122,15 @@ def run(start: date, end: date):
         f = RAW_POWER / f"{row.point_id}.parquet"
         if f.exists():
             df = pd.read_parquet(f)
+            if incremental:
+                ultimo = pd.to_datetime(df["fecha"]).max().date()
+                if ultimo < end:
+                    nuevo = fetch_point(row.plat, row.plon, ultimo + timedelta(days=1), end)
+                    nuevo = nuevo.dropna(subset=["temp_c"])        # dias que POWER aun no publico
+                    if not nuevo.empty:
+                        df = pd.concat([df, nuevo], ignore_index=True).drop_duplicates("fecha").sort_values("fecha")
+                        df.to_parquet(f, index=False)
+                    time.sleep(1.0)
         else:
             df = fetch_point(row.plat, row.plon, start, end)
             df.to_parquet(f, index=False)
@@ -141,8 +150,9 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--start", default="2012-01-01")
     ap.add_argument("--end", default=(date.today() - timedelta(days=4)).isoformat())
+    ap.add_argument("--incremental", action="store_true", help="solo pedir los dias nuevos de cada punto")
     a = ap.parse_args()
-    run(date.fromisoformat(a.start), date.fromisoformat(a.end))
+    run(date.fromisoformat(a.start), date.fromisoformat(a.end), incremental=a.incremental)
 
 
 if __name__ == "__main__":

@@ -11,6 +11,7 @@ type Riesgo = { h3_cell: string; probabilidad: number; indice: number | null; ba
 type Alerta = { h3_cell: string; banda: string | null; indice: number | null; probabilidad: number; motivo: string | null };
 type Depto = { nombre: string; geojson: any };
 type RDepto = { departamento: string; probabilidad: number; banda: string; n_celdas: number };
+type FocoRec = { foco_id: number; lat: number; lon: number; ts_utc: string; hora_local: number | null; satelite: string; instrumento: string; frp_mw: number | null; confianza_cat: string };
 type Escala = { banda: string; orden: number; frecuencia_observada: number | null; lift: number | null; frac_celdas_dia: number };
 
 export default function Dashboard() {
@@ -18,6 +19,11 @@ export default function Dashboard() {
   const mapRef = useRef<any>(null);
   const capasRef = useRef<any[]>([]);
   const [fecha, setFecha] = useState<string | null>(null);
+  const [fechas, setFechas] = useState<string[]>([]);
+  const [ultimaFoco, setUltimaFoco] = useState<string | null>(null);
+  const [focosRec, setFocosRec] = useState<FocoRec[]>([]);
+  const [verFocos, setVerFocos] = useState(true);
+  const focosRef = useRef<any>(null);
   const [riesgo, setRiesgo] = useState<Riesgo[]>([]);
   const [alertas, setAlertas] = useState<Alerta[]>([]);
   const [deptos, setDeptos] = useState<Depto[]>([]);
@@ -28,33 +34,55 @@ export default function Dashboard() {
   const [error, setError] = useState<string | null>(null);
   const [listo, setListo] = useState(false);
 
+  // 1) Datos que no dependen de la fecha
   useEffect(() => {
     const sb = getSupabase();
     if (!sb) { setError("Faltan NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_ANON_KEY."); return; }
     (async () => {
       try {
-        const { data: f, error: e1 } = await sb.from("riesgo").select("fecha").order("fecha", { ascending: false }).limit(1);
+        const { data: f, error: e1 } = await sb.from("riesgo_depto").select("fecha").order("fecha", { ascending: false }).limit(400);
         if (e1) throw e1;
-        if (!f || f.length === 0) { setError("Todavia no hay predicciones cargadas en Supabase."); return; }
-        const fe = f[0].fecha as string;
-        setFecha(fe);
-        const [r, a, d, rd, es] = await Promise.all([
-          traerTodo<Riesgo>("riesgo", "h3_cell,probabilidad,indice,banda", [["fecha", fe]]),
-          sb.from("alertas").select("h3_cell,banda,indice,probabilidad,motivo").eq("fecha", fe).order("indice", { ascending: false }).limit(40),
+        const lista = Array.from(new Set((f ?? []).map((x: any) => x.fecha as string)));
+        if (lista.length === 0) { setError("Todavia no hay predicciones cargadas en Supabase."); return; }
+        setFechas(lista);
+        setFecha(lista[0]);
+        const [d, es, uf] = await Promise.all([
           sb.from("departamentos").select("nombre,geojson"),
-          sb.from("riesgo_depto").select("departamento,probabilidad,banda,n_celdas").eq("fecha", fe).order("probabilidad", { ascending: false }),
           sb.from("escala_bandas").select("banda,orden,frecuencia_observada,lift,frac_celdas_dia").order("orden"),
+          sb.from("focos_vista").select("ts_utc").order("ts_utc", { ascending: false }).limit(1),
+        ]);
+        setDeptos((d.data ?? []) as Depto[]);
+        setEscala((es.data ?? []) as Escala[]);
+        const ult = uf.data && uf.data.length ? (uf.data[0].ts_utc as string) : null;
+        if (ult) {
+          setUltimaFoco(ult.slice(0, 10));
+          const desde = new Date(new Date(ult).getTime() - 3 * 86400000).toISOString();
+          const { data: fr } = await sb.from("focos_vista")
+            .select("foco_id,lat,lon,ts_utc,hora_local,satelite,instrumento,frp_mw,confianza_cat")
+            .gte("ts_utc", desde).limit(1500);
+          setFocosRec((fr ?? []) as FocoRec[]);
+        }
+      } catch (e: any) { setError(e?.message ?? "Error al leer Supabase"); }
+    })();
+  }, []);
+
+  // 2) Datos de la fecha elegida
+  useEffect(() => {
+    const sb = getSupabase();
+    if (!sb || !fecha) return;
+    (async () => {
+      try {
+        const [r, a, rd] = await Promise.all([
+          traerTodo<Riesgo>("riesgo", "h3_cell,probabilidad,indice,banda", [["fecha", fecha]]),
+          sb.from("alertas").select("h3_cell,banda,indice,probabilidad,motivo").eq("fecha", fecha).order("indice", { ascending: false }).order("probabilidad", { ascending: false }).limit(40),
+          sb.from("riesgo_depto").select("departamento,probabilidad,banda,n_celdas").eq("fecha", fecha).order("probabilidad", { ascending: false }),
         ]);
         setRiesgo(r);
         setAlertas((a.data ?? []) as Alerta[]);
-        setDeptos((d.data ?? []) as Depto[]);
         setRdeptos((rd.data ?? []) as RDepto[]);
-        setEscala((es.data ?? []) as Escala[]);
-      } catch (e: any) {
-        setError(e?.message ?? "Error al leer Supabase");
-      }
+      } catch (e: any) { setError(e?.message ?? "Error al leer Supabase"); }
     })();
-  }, []);
+  }, [fecha]);
 
   useEffect(() => {
     let vivo = true;
@@ -106,6 +134,25 @@ export default function Dashboard() {
     })();
   }, [listo, riesgo, deptos, rdeptos, capa]);
 
+  // 4) Focos satelitales recientes
+  useEffect(() => {
+    if (!listo || !mapRef.current) return;
+    (async () => {
+      const L = (await import("leaflet")).default;
+      if (focosRef.current) { focosRef.current.remove(); focosRef.current = null; }
+      if (!verFocos || focosRec.length === 0) return;
+      const g = L.layerGroup();
+      for (const f of focosRec) {
+        L.circleMarker([f.lat, f.lon], { radius: 4, color: "#ffffff", weight: 1, fillColor: "#111827", fillOpacity: 0.95 })
+          .bindPopup(`<b>Foco satelital</b><br/>${f.ts_utc.slice(0, 16).replace("T", " ")} UTC<br/>${f.instrumento} (${f.satelite})<br/>Confianza: ${f.confianza_cat}<br/>FRP: ${f.frp_mw ?? "s/d"} MW`)
+          .addTo(g);
+      }
+      g.addTo(mapRef.current);
+      focosRef.current = g;
+    })();
+  }, [listo, focosRec, verFocos]);
+
+  const esActual = !!(fecha && ultimaFoco && (new Date(ultimaFoco).getTime() - new Date(fecha).getTime()) / 86400000 <= 10);
   const conteo = (id: string) => riesgo.filter((r) => r.banda === id).length;
   const ir = (h3: string) => { const [la, lo] = cellToLatLng(h3); mapRef.current?.setView([la, lo], 10); };
   const pct = (x: number | null) => (x == null ? "s/d" : (x * 100).toFixed(1) + "%");
@@ -121,7 +168,22 @@ export default function Dashboard() {
       </div>
       <aside className="panel">
         <Nav activo="mapa" />
-        <p className="sub">Repeticion historica: riesgo de focos en los 7 dias siguientes a {fecha ?? "..."}. No es el pronostico de hoy.</p>
+        <div className="fechabar">
+          <select value={fecha ?? ""} onChange={(e) => setFecha(e.target.value)}>
+            {fechas.map((f) => <option key={f} value={f}>{f}</option>)}
+          </select>
+          <span className={esActual ? "etq actual" : "etq hist"}>{esActual ? "Situacion actual" : "Repeticion historica"}</span>
+        </div>
+        <p className="sub">
+          Riesgo de focos en los 7 dias siguientes a {fecha ?? "..."}.
+          {esActual ? " Calculado con datos satelitales hasta " + ultimaFoco + "." : " Es una repeticion de una fecha pasada, no el pronostico de hoy."}
+        </p>
+        {focosRec.length > 0 && (
+          <label className="chk">
+            <input type="checkbox" checked={verFocos} onChange={(e) => setVerFocos(e.target.checked)} />
+            {" "}Mostrar focos satelitales de los ultimos 3 dias ({focosRec.length}, hasta {ultimaFoco})
+          </label>
+        )}
         {error && <div className="msg">{error}</div>}
 
         <div className="leyenda">
