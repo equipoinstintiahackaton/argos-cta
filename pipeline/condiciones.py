@@ -34,11 +34,14 @@ def calcular(focos: pd.DataFrame, celda_punto: pd.DataFrame, clima: pd.DataFrame
     cand = cand[cand["_merge"] == "left_only"].drop(columns="_merge")
     cand = cand[(cand["fecha"] >= con["fecha"].min()) & (cand["fecha"] <= con["fecha"].max())]
 
+    # Base por estrato (punto, mes): cada lugar se compara consigo mismo en la misma epoca.
     rng = np.random.default_rng(seed)
+    cand["mes"] = cand["fecha"].dt.month
+    pools = {k: g for k, g in cand.groupby(["point_id", "mes"])}
     partes = []
-    for mes, n in con["fecha"].dt.month.value_counts().items():
-        pool = cand[cand["fecha"].dt.month == mes]
-        if len(pool):
+    for (pid, mes), n in con.groupby(["point_id", con["fecha"].dt.month]).size().items():
+        pool = pools.get((pid, mes))
+        if pool is not None and len(pool):
             partes.append(pool.sample(n=min(len(pool), n * ratio), random_state=int(rng.integers(1 << 30))))
     base = pd.concat(partes)
 

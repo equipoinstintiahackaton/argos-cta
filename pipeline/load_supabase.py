@@ -210,6 +210,11 @@ def main():
     if any(k in a.que for k in ("riesgo", "riesgo_depto", "alertas")) and not a.fecha:
         raise SystemExit("--fecha es obligatoria para riesgo, riesgo_depto y alertas")
 
+    if a.fecha == "ultima":
+        from pipeline.predict import ultima_fecha
+        a.fecha = ultima_fecha()
+        print(f"fecha: {a.fecha}")
+
     # El orden importa por las claves foraneas: celdas -> departamentos -> focos -> riesgo -> alertas
     with conectar() as conn:
         if "celdas" in a.que:

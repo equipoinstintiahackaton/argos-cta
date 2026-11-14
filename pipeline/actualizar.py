@@ -72,6 +72,7 @@ def main():
     print(f"Datos historicos (SP) hasta {fin_sp}")
 
     hoy = date.today()
+    hastas = {}
     for src in FUENTES_NRT:
         av = disponibilidad(src)
         if av is None:
@@ -80,6 +81,7 @@ def main():
             print(f"{src}: FIRMS ofrece del {av[0]} al {av[1]}")
         desde = max(fin_sp + timedelta(days=1), av[0]) if av else fin_sp + timedelta(days=1)
         hasta = min(hoy, av[1]) if av else hoy
+        hastas[src] = hasta
         if desde > fin_sp + timedelta(days=1):
             print(f"  AVISO: hueco sin datos entre {fin_sp + timedelta(days=1)} y {desde - timedelta(days=1)}: "
                   "NRT no llega tan atras y SP todavia no lo publico. Los conteos de esos dias estaran subestimados.")
@@ -89,6 +91,23 @@ def main():
         print(f"  descargando {desde} a {hasta} (se repiten {borradas} ventanas recientes)")
         filas = ingest_firms.download(src, desde, hasta)
         print(f"  filas nuevas: {filas}")
+
+    for alt in ("VIIRS_NOAA20_NRT", "VIIRS_NOAA21_NRT"):
+        carpeta = config.RAW_FIRMS / alt
+        if carpeta.exists():
+            limpiar_recientes(carpeta, date(2000, 1, 1))
+    snpp_fin = hastas.get("VIIRS_SNPP_NRT")
+    if snpp_fin and snpp_fin < hoy - timedelta(days=2):
+        for alt in ("VIIRS_NOAA20_NRT", "VIIRS_NOAA21_NRT"):
+            av = disponibilidad(alt)
+            if av and av[1] > snpp_fin:
+                desde = snpp_fin + timedelta(days=1)
+                hasta = min(hoy, av[1])
+                print(f"\nAVISO: VIIRS Suomi NPP solo llega al {snpp_fin}. Se completa con {alt} del {desde} al {hasta}.")
+                print(f"  filas nuevas: {ingest_firms.download(alt, desde, hasta)}")
+                break
+        else:
+            print(f"\nAVISO: no hay VIIRS despues del {snpp_fin}. El riesgo actual puede estar subestimado.")
 
     print("\nArmonizando focos ...")
     final = harmonize.run()
