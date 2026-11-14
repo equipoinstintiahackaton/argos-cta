@@ -15,7 +15,7 @@ import requests
 
 from pipeline import config
 
-MAX_DAYS = 10  # limite de la Area API por pedido
+MAX_DAYS = 5  # limite de la Area API por pedido
 
 
 def _windows(start: date, end: date):
@@ -37,6 +37,8 @@ def fetch_window(source: str, start: date, n_days: int, retries: int = 4) -> str
             r = requests.get(url, timeout=60)
             if r.status_code == 200:
                 return r.text
+            if r.status_code in (400, 401, 403):
+                raise RuntimeError(f"FIRMS rechazo el pedido ({r.status_code}): {r.text[:200]!r}")
             wait = 2 ** attempt * 5
             print(f"  HTTP {r.status_code} en {source} {start}, reintento en {wait}s")
         except requests.RequestException as exc:

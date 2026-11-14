@@ -26,7 +26,9 @@ create table if not exists focos (
   confianza_num real,
   dia_noche text,
   n_detecciones integer default 1,
-  fuentes text
+  fuentes text,
+  frp_total_mw real,
+  n_pixeles integer
 );
 create index if not exists focos_geom_idx on focos using gist (geom);
 create index if not exists focos_ts_idx on focos (ts_utc);

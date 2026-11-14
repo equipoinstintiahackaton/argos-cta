@@ -25,6 +25,7 @@ COLUMNAS_FINALES = [
     "foco_id", "lat", "lon", "fecha_utc", "ts_utc", "ts_local", "hora_local",
     "instrumento", "satelite", "res_m", "brillo_k", "frp_mw", "confianza_cat",
     "confianza_num", "dia_noche", "h3_cell", "n_detecciones", "fuentes",
+    "frp_total_mw", "n_pixeles",
 ]
 
 
@@ -121,8 +122,14 @@ def deduplicate(df: pd.DataFrame) -> pd.DataFrame:
         .agg(lambda s: "+".join(sorted(set(s))))
         .rename("fuentes")
     )
+    # FRP total y cantidad de pixeles: solo del sensor de mayor resolucion del grupo,
+    # para no contar dos veces el mismo fuego visto por MODIS y VIIRS.
+    res_min = df.groupby("grupo")["res_m"].transform("min")
+    best = df[df["res_m"] == res_min]
+    agg_frp = best.groupby("grupo")["frp_mw"].sum().rename("frp_total_mw")
+    agg_pix = best.groupby("grupo").size().rename("n_pixeles")
     rep = df.drop_duplicates("grupo", keep="first").set_index("grupo")
-    rep = rep.join(agg_n).join(agg_src).reset_index(drop=True)
+    rep = rep.join(agg_n).join(agg_src).join(agg_frp).join(agg_pix).reset_index(drop=True)
     return rep
 
 

@@ -61,6 +61,8 @@ def test_deduplicacion_une_mismo_evento_y_conserva_viirs():
     fusionado = dedup[dedup["n_detecciones"] == 2].iloc[0]
     assert fusionado["instrumento"] == "VIIRS"      # se queda con mayor resolucion
     assert fusionado["fuentes"] == "MODIS+VIIRS"
+    assert fusionado["frp_total_mw"] == 10.0   # solo VIIRS, sin doble conteo con MODIS
+    assert fusionado["n_pixeles"] == 1
 
 
 def test_finalize_columnas_y_h3():
