@@ -1,0 +1,17 @@
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background: #0b0f14; color: #e5e7eb; }
+.app { display: grid; grid-template-columns: 1fr 360px; height: 100vh; }
+.mapa { height: 100%; width: 100%; }
+.panel { overflow-y: auto; padding: 16px; border-left: 1px solid #1f2937; background: #0f1720; }
+.panel h1 { margin: 0 0 4px; font-size: 20px; letter-spacing: 2px; }
+.panel .sub { margin: 0 0 12px; font-size: 12px; color: #9ca3af; }
+.resumen { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 14px; }
+.chip { border-radius: 6px; padding: 8px 4px; text-align: center; font-size: 11px; color: #0b0f14; font-weight: 600; }
+.chip b { display: block; font-size: 16px; }
+.alerta { border: 1px solid #1f2937; border-left-width: 4px; border-radius: 6px; padding: 8px 10px; margin-bottom: 8px; font-size: 12px; cursor: pointer; }
+.alerta:hover { background: #162231; }
+.alerta .top { display: flex; justify-content: space-between; font-weight: 600; }
+.alerta .motivo { margin-top: 4px; color: #9ca3af; }
+.aviso { font-size: 11px; color: #9ca3af; border-top: 1px solid #1f2937; padding-top: 10px; margin-top: 12px; line-height: 1.4; }
+.msg { padding: 24px; color: #fca5a5; }
+@media (max-width: 800px) { .app { grid-template-columns: 1fr; grid-template-rows: 55vh 1fr; height: auto; } .panel { border-left: none; border-top: 1px solid #1f2937; } }
