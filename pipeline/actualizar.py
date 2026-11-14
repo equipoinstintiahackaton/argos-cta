@@ -92,6 +92,9 @@ def main():
         filas = ingest_firms.download(src, desde, hasta)
         print(f"  filas nuevas: {filas}")
 
+    # Si VIIRS Suomi NPP se retrasa respecto de hoy, un solo satelite VIIRS de reemplazo (NOAA-20,
+    # o NOAA-21) cubre esos dias. Es un solo satelite VIIRS por dia, asi la densidad de focos es
+    # comparable con la del entrenamiento. Se bajan solo los dias que SNPP no tiene.
     for alt in ("VIIRS_NOAA20_NRT", "VIIRS_NOAA21_NRT"):
         carpeta = config.RAW_FIRMS / alt
         if carpeta.exists():
@@ -103,11 +106,14 @@ def main():
             if av and av[1] > snpp_fin:
                 desde = snpp_fin + timedelta(days=1)
                 hasta = min(hoy, av[1])
-                print(f"\nAVISO: VIIRS Suomi NPP solo llega al {snpp_fin}. Se completa con {alt} del {desde} al {hasta}.")
-                print(f"  filas nuevas: {ingest_firms.download(alt, desde, hasta)}")
+                print(f"\nAVISO: VIIRS Suomi NPP solo llega al {snpp_fin}. Se completa con {alt} "
+                      f"del {desde} al {hasta}.")
+                filas = ingest_firms.download(alt, desde, hasta)
+                print(f"  filas nuevas: {filas}")
                 break
         else:
-            print(f"\nAVISO: no hay VIIRS despues del {snpp_fin}. El riesgo actual puede estar subestimado.")
+            print(f"\nAVISO: no hay VIIRS despues del {snpp_fin}. Los focos de los ultimos dias "
+                  "vienen solo de MODIS y el riesgo actual puede estar subestimado.")
 
     print("\nArmonizando focos ...")
     final = harmonize.run()

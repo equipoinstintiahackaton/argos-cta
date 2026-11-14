@@ -201,10 +201,37 @@ def cargar_estadisticas(conn):
           f"{', escala' if esc else ''}{', calibracion' if cal else ''}")
 
 
+def cargar_auditoria(conn):
+    aud = json.loads((config.PROCESSED / "auditoria.json").read_text())
+    cob = pd.read_parquet(config.PROCESSED / "auditoria_cobertura.parquet")
+    with conn.cursor() as cur:
+        cur.execute("truncate auditoria")
+        cur.executemany("insert into auditoria (orden, chequeo, estado, detalle) values (%s, %s, %s, %s)",
+                        [(i, c["chequeo"], c["estado"], c["detalle"]) for i, c in enumerate(aud)])
+        cur.execute("truncate auditoria_cobertura")
+        _ejecutar(cur, "insert into auditoria_cobertura (anio, sensor, focos, dias_con_focos) values (%s, %s, %s, %s)",
+                  filas(cob[["anio", "sensor", "focos", "dias_con_focos"]]))
+    conn.commit()
+    print(f"auditoria: {len(aud)} chequeos, {len(cob)} filas de cobertura")
+
+
+def cargar_backtest(conn):
+    bt = json.loads((MODELS / "backtest.json").read_text())
+    df = pd.DataFrame(bt["filas"])
+    cols = ["anio", "modelo", "positivos", "tasa_base", "pr_auc", "roc_auc", "brier",
+            "recall_top5", "recall_top10", "lift_top5"]
+    with conn.cursor() as cur:
+        cur.execute("truncate backtest")
+        _ejecutar(cur, "insert into backtest (" + ", ".join(cols) + ") values (" + ", ".join(["%s"] * len(cols)) + ")",
+                  filas(df[cols]))
+    conn.commit()
+    print(f"backtest: {len(df)} filas")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--que", nargs="+", required=True,
-                    choices=["celdas", "departamentos", "focos", "estadisticas", "condiciones", "riesgo", "riesgo_depto", "alertas"])
+                    choices=["celdas", "departamentos", "focos", "estadisticas", "condiciones", "auditoria", "backtest", "riesgo", "riesgo_depto", "alertas"])
     ap.add_argument("--fecha", help="YYYY-MM-DD (para riesgo y alertas)")
     a = ap.parse_args()
     if any(k in a.que for k in ("riesgo", "riesgo_depto", "alertas")) and not a.fecha:
@@ -227,6 +254,10 @@ def main():
             cargar_estadisticas(conn)
         if "condiciones" in a.que:
             cargar_condiciones(conn)
+        if "auditoria" in a.que:
+            cargar_auditoria(conn)
+        if "backtest" in a.que:
+            cargar_backtest(conn)
         if "riesgo" in a.que:
             cargar_riesgo(conn, a.fecha)
         if "riesgo_depto" in a.que:

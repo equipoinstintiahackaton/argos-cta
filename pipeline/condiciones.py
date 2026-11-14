@@ -4,7 +4,7 @@ Compara el clima de los dias CON focos contra el de dias SIN focos de los mismos
 (base). Asi se separa lo que es "clima de la epoca" de lo que de verdad se asocia al fuego.
 La unidad es (punto de la grilla NASA POWER, dia). Un dia es "con foco" si alguna celda de
 ese punto tuvo foco. La base excluye +-3 dias alrededor de cualquier foco del mismo punto y
-toma 5 dias por cada dia con foco, en el mismo mes del anio.
+toma 5 dias por cada dia con foco, del mismo punto y del mismo mes del anio.
 
 Uso:
     python -m pipeline.condiciones
@@ -34,7 +34,9 @@ def calcular(focos: pd.DataFrame, celda_punto: pd.DataFrame, clima: pd.DataFrame
     cand = cand[cand["_merge"] == "left_only"].drop(columns="_merge")
     cand = cand[(cand["fecha"] >= con["fecha"].min()) & (cand["fecha"] <= con["fecha"].max())]
 
-    # Base por estrato (punto, mes): cada lugar se compara consigo mismo en la misma epoca.
+    # La base se arma por estrato (punto de la grilla, mes): asi se compara cada lugar consigo
+    # mismo en la misma epoca. Sin esto, el clima de las zonas frias y altas (casi sin fuego)
+    # contaminaria la base y parecería que el fuego ocurre en dias "mas calidos".
     rng = np.random.default_rng(seed)
     cand["mes"] = cand["fecha"].dt.month
     pools = {k: g for k, g in cand.groupby(["point_id", "mes"])}

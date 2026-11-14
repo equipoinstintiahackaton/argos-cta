@@ -70,3 +70,23 @@ def test_condiciones_compara_con_base_del_mismo_mes():
     assert t.loc[("humedad_pct", "base"), "p50"] - t.loc[("humedad_pct", "foco"), "p50"] > 10
     assert abs(t.loc[("viento_kmh", "base"), "p50"] - t.loc[("viento_kmh", "foco"), "p50"]) < 2
     assert t.loc[("humedad_pct", "foco"), "n"] == len(fuego)
+
+
+def test_condiciones_no_confunde_lugar_con_clima():
+    """El punto frio nunca tiene fuego. Si la base mezclara puntos, los dias con foco
+    (todos en el punto calido) parecerian mucho mas calidos de lo normal."""
+    rng = np.random.default_rng(1)
+    dias = pd.date_range("2020-01-01", "2022-12-31")
+    partes = []
+    for pid, t in (("calido", 25.0), ("frio", 5.0)):
+        d = pd.DataFrame({"point_id": pid, "fecha": dias})
+        for v in condiciones.VARIABLES:
+            d[v] = rng.normal(20, 2, len(dias))
+        d["temp_c"] = rng.normal(t, 1, len(dias))
+        partes.append(d)
+    clima = pd.concat(partes, ignore_index=True)
+    fuego = dias[(dias.month == 9) & dias.day.isin([5, 20])]
+    focos = pd.DataFrame({"h3_cell": "a", "fecha_utc": fuego.date})
+    cp = pd.DataFrame({"h3_cell": ["a"], "point_id": ["calido"]})
+    t = condiciones.calcular(focos, cp, clima).set_index(["variable", "grupo"])
+    assert abs(t.loc[("temp_c", "foco"), "p50"] - t.loc[("temp_c", "base"), "p50"]) < 1.0

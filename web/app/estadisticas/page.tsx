@@ -10,6 +10,8 @@ type Mensual = { anio: number; mes: number; departamento: string; focos: number;
 type Hora = { departamento: string; hora: number; focos: number };
 type Escala = { banda: string; orden: number; frecuencia_observada: number | null; lift: number | null; frac_celdas_dia: number };
 type Cond = { variable: string; grupo: "foco" | "base"; n: number; media: number; p10: number; p25: number; p50: number; p75: number; p90: number };
+type Aud = { orden: number; chequeo: string; estado: "ok" | "aviso" | "error"; detalle: string };
+type Bt = { anio: number; modelo: string; positivos: number; pr_auc: number; recall_top5: number | null; recall_top10: number | null; lift_top5: number | null; brier: number | null };
 type Calib = { banda: string; orden: number; n: number; prometido: number | null; observado: number | null };
 
 const VARS: { id: string; label: string; unidad: string }[] = [
@@ -53,6 +55,8 @@ export default function Estadisticas() {
   const [escala, setEscala] = useState<Escala[]>([]);
   const [calib, setCalib] = useState<Calib[]>([]);
   const [cond, setCond] = useState<Cond[]>([]);
+  const [aud, setAud] = useState<Aud[]>([]);
+  const [bt, setBt] = useState<Bt[]>([]);
   const [depto, setDepto] = useState("Todos");
   const [anioR, setAnioR] = useState<number | null>(null);
   const [mesR, setMesR] = useState(8);
@@ -61,14 +65,16 @@ export default function Estadisticas() {
   useEffect(() => {
     (async () => {
       try {
-        const [a, b, c, d, e5] = await Promise.all([
+        const [a, b, c, d, e5, e6, e7] = await Promise.all([
           traerTodo<Mensual>("stats_mensual", "anio,mes,departamento,focos,focos_confiables,frp_total_mw,celdas_afectadas"),
           traerTodo<Hora>("stats_hora", "departamento,hora,focos"),
           traerTodo<Escala>("escala_bandas", "banda,orden,frecuencia_observada,lift,frac_celdas_dia", [], "orden"),
           traerTodo<Calib>("calibracion_depto", "banda,orden,n,prometido,observado", [], "orden"),
           traerTodo<Cond>("condiciones_focos", "variable,grupo,n,media,p10,p25,p50,p75,p90"),
+          traerTodo<Aud>("auditoria", "orden,chequeo,estado,detalle", [], "orden"),
+          traerTodo<Bt>("backtest", "anio,modelo,positivos,pr_auc,recall_top5,recall_top10,lift_top5,brier", [], "anio"),
         ]);
-        setM(a); setH(b); setEscala(c); setCalib(d); setCond(e5);
+        setM(a); setH(b); setEscala(c); setCalib(d); setCond(e5); setAud(e6); setBt(e7);
         if (a.length) setAnioR(Math.max(...a.map((x) => x.anio)));
       } catch (e: any) { setError(e?.message ?? "Error al leer Supabase"); }
     })();
@@ -86,6 +92,22 @@ export default function Estadisticas() {
   }, [h, depto]);
   const porDepto = deptos.map((d) => ({ etiqueta: d, valor: suma(m.filter((x) => x.departamento === d).map((x) => x.focos)) }))
     .sort((a, b) => b.valor - a.valor);
+
+  const NOMBRES_MODELO: Record<string, string> = {
+    modelo: "Modelo ARGOS (machine learning)", clim_celda_mes: "Historial de la celda en ese mes",
+    historial_celda: "Historial total de la celda", fuego_7d: "Focos de la ultima semana",
+  };
+  const aniosBt = useMemo(() => Array.from(new Set(bt.map((x) => x.anio))).sort(), [bt]);
+  const modelosBt = ["modelo", "clim_celda_mes", "historial_celda", "fuego_7d"];
+  const prom = (mod: string, k: "pr_auc" | "recall_top5" | "recall_top10" | "lift_top5") => {
+    const v = bt.filter((x) => x.modelo === mod).map((x) => x[k]).filter((x): x is number => x != null);
+    return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null;
+  };
+  const gana = aniosBt.filter((a) => {
+    const fila = (mod: string) => bt.find((x) => x.anio === a && x.modelo === mod)?.pr_auc ?? 0;
+    return fila("modelo") > Math.max(fila("clim_celda_mes"), fila("historial_celda"), fila("fuego_7d"));
+  }).length;
+  const colorEstado = { ok: "#22c55e", aviso: "#eab308", error: "#ef4444" } as const;
 
   const total = suma(f.map((x) => x.focos));
   const mesPico = porMes.reduce((a, b) => (b.valor > a.valor ? b : a), porMes[0] ?? { etiqueta: "-", valor: 0 });
@@ -187,6 +209,40 @@ export default function Estadisticas() {
           <thead><tr><th>Puesto</th><th>Departamento</th><th>Focos</th></tr></thead>
           <tbody>{ranking.map((r) => <tr key={r.d}><td>{r.puesto ?? "-"}</td><td>{r.d}</td><td>{r.focos}</td></tr>)}</tbody>
         </table>
+      </section>
+
+      <section className="card">
+        <h2>Backtesting: el modelo contra no usar machine learning</h2>
+        <p className="nota">Para cada año se entrena solo con datos anteriores y se evalua en ese año. Se compara contra reglas simples sin aprendizaje. Recall 5%: que parte de los focos reales cae dentro del 5% de celdas-dia con mayor puntaje.</p>
+        {bt.length === 0 ? <p className="nota">Todavia no hay backtest cargado.</p> : (
+          <>
+            <table className="tabla">
+              <thead><tr><th>Metodo</th><th>PR-AUC medio</th><th>Recall 5%</th><th>Recall 10%</th><th>Lift 5%</th></tr></thead>
+              <tbody>{modelosBt.map((mo) => (
+                <tr key={mo} style={mo === "modelo" ? { fontWeight: 700 } : undefined}>
+                  <td>{NOMBRES_MODELO[mo]}</td>
+                  <td>{prom(mo, "pr_auc")?.toFixed(3) ?? "s/d"}</td><td>{pct(prom(mo, "recall_top5"))}</td>
+                  <td>{pct(prom(mo, "recall_top10"))}</td><td>{prom(mo, "lift_top5")?.toFixed(1) ?? "s/d"}</td></tr>))}</tbody>
+            </table>
+            <p className="nota" style={{ marginTop: 8 }}>El modelo supera al mejor metodo simple (PR-AUC) en {gana} de {aniosBt.length} años evaluados.</p>
+            <h3 className="h3">PR-AUC por año</h3>
+            <table className="tabla">
+              <thead><tr><th>Año</th><th>Focos</th>{modelosBt.map((mo) => <th key={mo}>{mo === "modelo" ? "Modelo" : mo === "clim_celda_mes" ? "Celda-mes" : mo === "historial_celda" ? "Historial" : "7 dias"}</th>)}</tr></thead>
+              <tbody>{aniosBt.map((a) => (
+                <tr key={a}><td>{a}</td><td>{bt.find((x) => x.anio === a)?.positivos}</td>
+                  {modelosBt.map((mo) => <td key={mo}>{bt.find((x) => x.anio === a && x.modelo === mo)?.pr_auc.toFixed(3) ?? "s/d"}</td>)}</tr>))}</tbody>
+            </table>
+          </>)}
+      </section>
+
+      <section className="card">
+        <h2>Calidad de los datos</h2>
+        <p className="nota">Chequeos automaticos sobre los focos NASA FIRMS (MODIS y VIIRS) y el clima NASA POWER. Un aviso es una limitacion a tener en cuenta; un error invalida el dato.</p>
+        {aud.length === 0 ? <p className="nota">Todavia no hay auditoria cargada.</p> : (
+          <table className="tabla">
+            <tbody>{aud.map((c) => (
+              <tr key={c.orden}><td style={{ whiteSpace: "nowrap" }}><i className="dot" style={{ background: colorEstado[c.estado] }} />{c.chequeo}</td><td>{c.detalle}</td></tr>))}</tbody>
+          </table>)}
       </section>
 
       <section className="card">
