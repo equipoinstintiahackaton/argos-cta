@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Nav from "../../components/Nav";
-import Protegido from "../../components/Protegido";
+import Shell from "../../components/Shell";
 import Barras from "../../components/Barras";
 import { traerTodo } from "../../lib/datos";
 import { fecha, fechaCorta, duracion } from "../../lib/formato";
@@ -66,7 +65,6 @@ function Contenido() {
 
   return (
     <>
-      <Nav activo="registro" />
       <div className="pagina">
       <h1 className="titulo">Registro de incendios</h1>
       <p className="sub">Cada incendio agrupa las detecciones satelitales (MODIS + VIIRS) que estan a menos de 3 km y 48 h entre si. La duracion es la observada, de la primera a la ultima deteccion: es un minimo, porque el satelite pasa cada pocas horas y las nubes lo tapan. Solo detecciones de confianza nominal o alta.</p>
@@ -115,8 +113,8 @@ function Contenido() {
 
 export default function Registro() {
   return (
-    <Protegido>
+    <Shell activo="registro">
       <Contenido />
-    </Protegido>
+    </Shell>
   );
 }

@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Nav from "../../components/Nav";
-import Protegido from "../../components/Protegido";
+import Shell from "../../components/Shell";
 import Barras from "../../components/Barras";
 import { BANDAS, infoBanda } from "../../lib/bandas";
 import { traerTodo } from "../../lib/datos";
@@ -141,7 +140,6 @@ function Contenido() {
 
   return (
     <>
-      <Nav activo="estadisticas" />
       <div className="pagina">
       <h1 className="titulo">Estadisticas e historial de focos</h1>
       <p className="sub">Focos de calor armonizados MODIS + VIIRS (NASA FIRMS), solo vegetacion, dentro de Catamarca. Un foco es una deteccion satelital, no una superficie quemada.</p>
@@ -279,8 +277,8 @@ function Contenido() {
 
 export default function Estadisticas() {
   return (
-    <Protegido>
+    <Shell activo="estadisticas">
       <Contenido />
-    </Protegido>
+    </Shell>
   );
 }
