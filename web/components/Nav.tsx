@@ -26,7 +26,7 @@ export default function Nav({ activo }: { activo?: Activo }) {
 
   return (
     <header className="cab">
-      <Link href="/" className="marca">
+      <Link href={email ? "/dashboard" : "/"} className="marca">
         <img src="/logo-icon.png" alt="ARGOS" />
         <div>
           <span className="marca-n">ARGOS</span>
@@ -34,7 +34,7 @@ export default function Nav({ activo }: { activo?: Activo }) {
         </div>
       </Link>
       <nav className="menu">
-        {LINKS.filter((l) => l.id === "inicio" || email).map((l) => <Link key={l.id} href={l.href} className={activo === l.id ? "on" : ""}>{l.label}</Link>)}
+        {LINKS.filter((l) => (email ? l.id !== "inicio" : l.id === "inicio")).map((l) => <Link key={l.id} href={l.href} className={activo === l.id ? "on" : ""}>{l.label}</Link>)}
         {email ? (
           <>
             <span className="usuario">{email}</span>
