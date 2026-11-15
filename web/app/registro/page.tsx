@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Nav from "../../components/Nav";
 import Barras from "../../components/Barras";
 import { traerTodo } from "../../lib/datos";
+import { fecha, fechaCorta, duracion } from "../../lib/formato";
 
 type Inc = {
   incendio_id: number; inicio: string; fin: string; duracion_h: number; dias_activos: number;
@@ -11,17 +12,7 @@ type Inc = {
   frp_max_mw: number | null; frp_total_mw: number | null; tamano: string; prolongado: boolean; anio: number; mes: number;
 };
 
-const TZ = "America/Argentina/Catamarca";
 const MESES = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
-const fecha = (s: string) => new Date(s).toLocaleString("es-AR", { timeZone: TZ, day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
-const fechaCorta = (s: string) => new Date(s).toLocaleDateString("es-AR", { timeZone: TZ, day: "2-digit", month: "2-digit", year: "numeric" });
-
-function duracion(h: number) {
-  if (h < 0.05) return "puntual (1 pasada)";
-  if (h < 24) return `${Math.round(h)} h`;
-  const d = Math.floor(h / 24), r = Math.round(h - d * 24);
-  return r ? `${d} d ${r} h` : `${d} d`;
-}
 
 const MIN_DUR: { label: string; horas: number }[] = [
   { label: "Cualquiera", horas: -1 }, { label: "Mas de 1 pasada", horas: 0.05 },
@@ -73,8 +64,9 @@ export default function Registro() {
   }
 
   return (
-    <div className="pagina">
+    <>
       <Nav activo="registro" />
+      <div className="pagina">
       <h1 className="titulo">Registro de incendios</h1>
       <p className="sub">Cada incendio agrupa las detecciones satelitales (MODIS + VIIRS) que estan a menos de 3 km y 48 h entre si. La duracion es la observada, de la primera a la ultima deteccion: es un minimo, porque el satelite pasa cada pocas horas y las nubes lo tapan. Solo detecciones de confianza nominal o alta.</p>
       {error && <div className="msg">{error}</div>}
@@ -115,6 +107,7 @@ export default function Registro() {
         {f.length > limite && <button className="btn" style={{ marginTop: 8 }} onClick={() => setLimite(limite + 200)}>Mostrar mas</button>}
         <p className="nota" style={{ marginTop: 8 }}>* Mas de 14 dias con detecciones: puede ser varios incendios encadenados o quemas recurrentes en la misma zona.</p>
       </section>
-    </div>
+      </div>
+    </>
   );
 }

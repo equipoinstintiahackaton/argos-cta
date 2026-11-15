@@ -139,8 +139,9 @@ export default function Estadisticas() {
   const pct = (x: number | null) => (x == null ? "s/d" : (x * 100).toFixed(1) + "%");
 
   return (
-    <div className="pagina">
+    <>
       <Nav activo="estadisticas" />
+      <div className="pagina">
       <h1 className="titulo">Estadisticas e historial de focos</h1>
       <p className="sub">Focos de calor armonizados MODIS + VIIRS (NASA FIRMS), solo vegetacion, dentro de Catamarca. Un foco es una deteccion satelital, no una superficie quemada.</p>
       {error && <div className="msg">{error}</div>}
@@ -270,6 +271,7 @@ export default function Estadisticas() {
           {BANDAS.map((b) => <div key={b.id} className="lchip" style={{ background: b.color, color: b.id === "amarillo" ? "#111" : "#fff" }}><span>{b.label}</span><span>{b.desde}-{b.hasta}</span></div>)}
         </div>
       </section>
-    </div>
+      </div>
+    </>
   );
 }

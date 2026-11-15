@@ -1,12 +1,49 @@
-import Link from "next/link";
+"use client";
 
-export default function Nav({ activo }: { activo: "mapa" | "estadisticas" | "registro" }) {
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { getSupabase } from "../lib/supabase";
+
+export type Activo = "inicio" | "dashboard" | "registro" | "estadisticas" | "login";
+
+const LINKS: { id: Activo; href: string; label: string }[] = [
+  { id: "inicio", href: "/", label: "Inicio" },
+  { id: "dashboard", href: "/dashboard", label: "Dashboard" },
+  { id: "registro", href: "/registro", label: "Registro de incendios" },
+  { id: "estadisticas", href: "/estadisticas", label: "Estadisticas" },
+];
+
+export default function Nav({ activo }: { activo?: Activo }) {
+  const [email, setEmail] = useState<string | null>(null);
+
+  useEffect(() => {
+    const sb = getSupabase();
+    if (!sb) return;
+    sb.auth.getSession().then(({ data }) => setEmail(data.session?.user.email ?? null));
+    const { data: sub } = sb.auth.onAuthStateChange((_e, s) => setEmail(s?.user.email ?? null));
+    return () => sub.subscription.unsubscribe();
+  }, []);
+
   return (
-    <nav className="nav">
-      <span className="logo">ARGOS</span>
-      <Link href="/" className={activo === "mapa" ? "on" : ""}>Mapa y alertas</Link>
-      <Link href="/registro" className={activo === "registro" ? "on" : ""}>Registro de incendios</Link>
-      <Link href="/estadisticas" className={activo === "estadisticas" ? "on" : ""}>Estadisticas</Link>
-    </nav>
+    <header className="cab">
+      <Link href="/" className="marca">
+        <img src="/logo-icon.png" alt="ARGOS" />
+        <div>
+          <span className="marca-n">ARGOS</span>
+          <span className="marca-s">ALERTA DE RIESGO GEOESPACIAL Y OBSERVACION SATELITAL</span>
+        </div>
+      </Link>
+      <nav className="menu">
+        {LINKS.map((l) => <Link key={l.id} href={l.href} className={activo === l.id ? "on" : ""}>{l.label}</Link>)}
+        {email ? (
+          <>
+            <span className="usuario">{email}</span>
+            <button className="salir" onClick={() => getSupabase()?.auth.signOut()}>Salir</button>
+          </>
+        ) : (
+          <Link href="/login" className="entrar">Ingresar</Link>
+        )}
+      </nav>
+    </header>
   );
 }

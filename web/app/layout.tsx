@@ -3,8 +3,8 @@ import "leaflet/dist/leaflet.css";
 import "./globals.css";
 
 export const metadata = {
-  title: "ARGOS | Alerta temprana de incendios, Catamarca",
-  description: "Prioriza donde mirar: riesgo de focos de calor a 7 dias por celda de ~36 km2.",
+  title: "ARGOS | Alerta de Riesgo Geoespacial y Observacion Satelital",
+  description: "Conocer para prevenir. Riesgo de incendios en Catamarca a 7 dias con datos satelitales MODIS, VIIRS y clima NASA POWER.",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

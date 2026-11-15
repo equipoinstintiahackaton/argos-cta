@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { cellToBoundary, cellToLatLng } from "h3-js";
-import Nav from "./Nav";
 import { BANDAS, infoBanda } from "../lib/bandas";
 import { getSupabase } from "../lib/supabase";
 import { traerTodo } from "../lib/datos";
@@ -14,7 +13,7 @@ type RDepto = { departamento: string; probabilidad: number; banda: string; n_cel
 type FocoRec = { foco_id: number; lat: number; lon: number; ts_utc: string; hora_local: number | null; satelite: string; instrumento: string; frp_mw: number | null; confianza_cat: string };
 type Escala = { banda: string; orden: number; frecuencia_observada: number | null; lift: number | null; frac_celdas_dia: number };
 
-export default function Dashboard() {
+export default function Dashboard({ embebido = false }: { embebido?: boolean }) {
   const mapaRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
   const capasRef = useRef<any[]>([]);
@@ -158,7 +157,7 @@ export default function Dashboard() {
   const pct = (x: number | null) => (x == null ? "s/d" : (x * 100).toFixed(1) + "%");
 
   return (
-    <div className="app">
+    <div className={embebido ? "app embebido" : "app"}>
       <div className="mapawrap">
         <div ref={mapaRef} className="mapa" />
         <div className="capas">
@@ -167,7 +166,6 @@ export default function Dashboard() {
         </div>
       </div>
       <aside className="panel">
-        <Nav activo="mapa" />
         <div className="fechabar">
           <select value={fecha ?? ""} onChange={(e) => setFecha(e.target.value)}>
             {fechas.map((f) => <option key={f} value={f}>{f}</option>)}
