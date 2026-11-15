@@ -6,7 +6,7 @@ export const BANDAS: { id: Banda; label: string; color: string; opacidad: number
   { id: "naranja", label: "Naranja", color: "#fb923c", opacidad: 0.45, desde: 35, hasta: 45 },
   { id: "naranja_fuerte", label: "Naranja fuerte", color: "#ea580c", opacidad: 0.55, desde: 45, hasta: 60 },
   { id: "rojo", label: "Rojo", color: "#dc2626", opacidad: 0.65, desde: 60, hasta: 75 },
-  { id: "marron", label: "Marrón", color: "#7c2d12", opacidad: 0.75, desde: 75, hasta: 80 },
+  { id: "marron", label: "Marrón", color: "#b8793f", opacidad: 0.75, desde: 75, hasta: 80 },
   { id: "negro", label: "Negro", color: "#000000", opacidad: 0.85, desde: 80, hasta: 100 },
 ];
 
