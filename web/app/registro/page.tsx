@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Nav from "../../components/Nav";
+import Protegido from "../../components/Protegido";
 import Barras from "../../components/Barras";
 import { traerTodo } from "../../lib/datos";
 import { fecha, fechaCorta, duracion } from "../../lib/formato";
@@ -19,7 +20,7 @@ const MIN_DUR: { label: string; horas: number }[] = [
   { label: "12 h o mas", horas: 12 }, { label: "1 dia o mas", horas: 24 }, { label: "3 dias o mas", horas: 72 }, { label: "7 dias o mas", horas: 168 },
 ];
 
-export default function Registro() {
+function Contenido() {
   const [datos, setDatos] = useState<Inc[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [anio, setAnio] = useState("Todos");
@@ -109,5 +110,13 @@ export default function Registro() {
       </section>
       </div>
     </>
+  );
+}
+
+export default function Registro() {
+  return (
+    <Protegido>
+      <Contenido />
+    </Protegido>
   );
 }

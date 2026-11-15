@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Nav from "../../components/Nav";
+import Protegido from "../../components/Protegido";
 import Barras from "../../components/Barras";
 import { BANDAS, infoBanda } from "../../lib/bandas";
 import { traerTodo } from "../../lib/datos";
@@ -49,7 +50,7 @@ const MESES = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "O
 const MESES_LARGO = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 const suma = (xs: number[]) => xs.reduce((a, b) => a + b, 0);
 
-export default function Estadisticas() {
+function Contenido() {
   const [m, setM] = useState<Mensual[]>([]);
   const [h, setH] = useState<Hora[]>([]);
   const [escala, setEscala] = useState<Escala[]>([]);
@@ -273,5 +274,13 @@ export default function Estadisticas() {
       </section>
       </div>
     </>
+  );
+}
+
+export default function Estadisticas() {
+  return (
+    <Protegido>
+      <Contenido />
+    </Protegido>
   );
 }

@@ -36,8 +36,7 @@ export default function Landing() {
               satelital, mapas y analisis de datos.
             </p>
             <div className="botones">
-              <Link href="/dashboard" className="boton">Explorar Catamarca</Link>
-              <Link href="/registro" className="boton sec">Registro de incendios</Link>
+              <Link href="/login" className="boton">Explorar Catamarca</Link>
             </div>
           </div>
         </section>
@@ -68,7 +67,7 @@ export default function Landing() {
               <h3>🗺️ Mapa interactivo de Catamarca</h3>
               <p>Explora la distribucion de los focos de calor y el riesgo estimado en los 16 departamentos.</p>
               <div className="deptos">{DEPTOS.map((d) => <span key={d}>{d}</span>)}</div>
-              <Link href="/dashboard#mapa" className="boton">Abrir el mapa</Link>
+              <Link href="/login" className="boton">Abrir el mapa</Link>
             </div>
           </div>
         </section>
@@ -82,7 +81,6 @@ export default function Landing() {
             complementa y no reemplaza el criterio operativo de bomberos y brigadas.
           </p>
           <div className="botones" style={{ marginTop: 10 }}>
-            <Link href="/estadisticas" className="boton sec">Estadisticas y confiabilidad</Link>
             <Link href="/login" className="boton sec">Ingresar</Link>
           </div>
         </section>

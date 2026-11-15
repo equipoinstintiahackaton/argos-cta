@@ -34,11 +34,11 @@ export default function Nav({ activo }: { activo?: Activo }) {
         </div>
       </Link>
       <nav className="menu">
-        {LINKS.map((l) => <Link key={l.id} href={l.href} className={activo === l.id ? "on" : ""}>{l.label}</Link>)}
+        {LINKS.filter((l) => l.id === "inicio" || email).map((l) => <Link key={l.id} href={l.href} className={activo === l.id ? "on" : ""}>{l.label}</Link>)}
         {email ? (
           <>
             <span className="usuario">{email}</span>
-            <button className="salir" onClick={() => getSupabase()?.auth.signOut()}>Salir</button>
+            <button className="salir" onClick={async () => { await getSupabase()?.auth.signOut(); window.location.href = "/"; }}>Salir</button>
           </>
         ) : (
           <Link href="/login" className="entrar">Ingresar</Link>
