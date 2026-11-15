@@ -1,13 +1,13 @@
 {
   "p_anclas": [
-    0.00032815037411637604,
-    0.002052149338407278,
-    0.0038931485242058037,
-    0.008318995331624031,
-    0.01611919728570366,
-    0.024667912506227494,
-    0.031109378153878212,
-    0.08234396531823349
+    0.00013144225522410125,
+    0.0021501519472727775,
+    0.0054348964686353205,
+    0.01338828468809414,
+    0.02307684188239956,
+    0.03072767273402691,
+    0.04458189238091087,
+    0.3624770115280457
   ],
   "q_anclas": [
     0.0,
@@ -29,63 +29,63 @@
     80,
     100
   ],
-  "frecuencia_base": 0.0016055779997259378,
+  "frecuencia_base": 0.0022509447298943996,
   "tabla_prueba": [
     {
       "banda": "verde",
       "desde": 0,
       "hasta": 20,
-      "frac_celdas_dia": 0.8064,
+      "frac_celdas_dia": 0.7934,
       "frecuencia_observada": 0.0004,
-      "lift": 0.3
+      "lift": 0.2
     },
     {
       "banda": "amarillo",
       "desde": 20,
       "hasta": 35,
-      "frac_celdas_dia": 0.0999,
-      "frecuencia_observada": 0.0018,
-      "lift": 1.1
+      "frac_celdas_dia": 0.1101,
+      "frecuencia_observada": 0.0023,
+      "lift": 1.0
     },
     {
       "banda": "naranja",
       "desde": 35,
       "hasta": 45,
-      "frac_celdas_dia": 0.0515,
-      "frecuencia_observada": 0.0059,
-      "lift": 3.7
+      "frac_celdas_dia": 0.0513,
+      "frecuencia_observada": 0.0078,
+      "lift": 3.4
     },
     {
       "banda": "naranja_fuerte",
       "desde": 45,
       "hasta": 60,
-      "frac_celdas_dia": 0.0239,
-      "frecuencia_observada": 0.0119,
-      "lift": 7.4
+      "frac_celdas_dia": 0.0246,
+      "frecuencia_observada": 0.0155,
+      "lift": 6.9
     },
     {
       "banda": "rojo",
       "desde": 60,
       "hasta": 75,
-      "frac_celdas_dia": 0.0091,
-      "frecuencia_observada": 0.0189,
-      "lift": 11.8
+      "frac_celdas_dia": 0.0089,
+      "frecuencia_observada": 0.0229,
+      "lift": 10.2
     },
     {
       "banda": "marron",
       "desde": 75,
       "hasta": 80,
-      "frac_celdas_dia": 0.0044,
-      "frecuencia_observada": 0.0285,
-      "lift": 17.8
+      "frac_celdas_dia": 0.0057,
+      "frecuencia_observada": 0.0334,
+      "lift": 14.9
     },
     {
       "banda": "negro",
       "desde": 80,
       "hasta": 100,
-      "frac_celdas_dia": 0.0048,
-      "frecuencia_observada": 0.044,
-      "lift": 27.4
+      "frac_celdas_dia": 0.0059,
+      "frecuencia_observada": 0.0851,
+      "lift": 37.8
     }
   ]
 }

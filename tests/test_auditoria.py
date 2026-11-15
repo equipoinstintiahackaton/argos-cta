@@ -31,9 +31,22 @@ def _focos(n=40):
 
 def test_duplicados_residuales():
     f = _focos(5)
-    assert auditoria.duplicados_residuales(f) == 0
+    assert auditoria.duplicados_residuales(f) == (0, 0)
     dup = pd.concat([f, f.iloc[[0]].assign(lat=f.iloc[0]["lat"] + 0.003)], ignore_index=True)  # 330 m, misma hora
-    assert auditoria.duplicados_residuales(dup) == 1
+    assert auditoria.duplicados_residuales(dup) == (1, 1)
+    # 800 m y 2 h: la esfera de union de la deduplicacion NO los une, el cilindro si los cuenta
+    lim = pd.concat([f, f.iloc[[0]].assign(lat=f.iloc[0]["lat"] + 0.0072,
+                                           ts_utc=f.iloc[0]["ts_utc"] + pd.Timedelta(hours=2))], ignore_index=True)
+    assert auditoria.duplicados_residuales(lim) == (0, 1)
+
+
+def test_contra_firms_sin_salto_de_linea_final(tmp_path, monkeypatch):
+    d = tmp_path / "MODIS_SP"
+    d.mkdir()
+    (d / "2020-01-01_5d.csv").write_text("latitude,longitude\n1,2\n3,4")      # sin \n final, como llega de FIRMS
+    from pipeline import ingest_firms
+    monkeypatch.setattr(ingest_firms, "fetch_window", lambda *a, **k: "latitude,longitude\n1,2\n3,4")
+    assert auditoria.contra_firms(tmp_path, 1)[0]["estado"] == "ok"
 
 
 def test_campos_detecta_coordenadas_y_valores_imposibles():
@@ -109,3 +122,26 @@ def test_metricas_recall_top():
     p = np.r_[np.linspace(0.9, 0.8, 10), np.linspace(0.1, 0.0, 90)]     # perfecto
     m = backtest.metricas(y, p, np.ones(100), con_brier=True)
     assert m["recall_top10"] == 1.0 and m["pr_auc"] > 0.99 and m["brier"] < 0.1
+
+
+def test_brillo_pocos_valores_es_aviso_y_muchos_error():
+    f = _focos(40)
+    f.loc[0, "brillo_k"] = 208.0                    # piso real de VIIRS I4
+    est = {c["chequeo"]: c["estado"] for c in auditoria.chequeo_campos(f)}
+    assert "brillo fuera de rango" not in est       # 208 K cae dentro del rango VIIRS 200 a 400
+    f.loc[0, "brillo_k"] = 900.0
+    est = {c["chequeo"]: c["estado"] for c in auditoria.chequeo_campos(f)}
+    assert est["brillo fuera de rango"] == "error"  # 1 de 40 supera el 0.1%
+    grande = _focos(40).loc[[0] * 3000].reset_index(drop=True).assign(
+        ts_utc=lambda d: d["ts_utc"] + pd.to_timedelta(np.arange(len(d)), unit="s"))
+    grande.loc[0, "brillo_k"] = 900.0
+    est = {c["chequeo"]: c["estado"] for c in auditoria.chequeo_campos(grande)}
+    assert est["brillo fuera de rango"] == "aviso"  # 1 de 3000 es menos del 0.1%
+
+
+def test_recall_top_con_empates_no_reclama_todo():
+    from pipeline import backtest
+    y = np.r_[np.ones(2000), np.zeros(98000)]
+    p = np.zeros(100000)                             # baseline que da 0 a todo
+    rec, lift = backtest.recall_top(y, p, np.ones(100000), 0.05)
+    assert 0.03 < rec < 0.07 and 0.6 < lift < 1.4    # esperado ~5% y lift 1, no 100%

@@ -36,6 +36,9 @@ RANGOS_CLIMA = {
     "temp_c": (-30, 50), "temp_max_c": (-25, 55), "humedad_pct": (0, 100),
     "viento_kmh": (0, 200), "precip_mm": (0, 500),
 }
+# VIIRS I4 llega hasta ~208 K como piso del sensor y satura cerca de 367 K; MODIS T21 sube hasta ~505 K.
+RANGO_BRILLO = {"VIIRS": (200, 400), "MODIS": (250, 520)}
+TOLERANCIA = 0.001   # hasta 0.1% de valores raros es aviso; mas que eso invalida el campo
 VENTANA = re.compile(r"^(\d{4}-\d{2}-\d{2})_(\d+)d\.csv$")
 
 
@@ -151,21 +154,24 @@ def chequeo_cobertura(focos: pd.DataFrame, cob: pd.DataFrame) -> list:
 
 # ---------------------------------------------------------------- 5. duplicados
 def duplicados_residuales(focos: pd.DataFrame, radio_m=config.DEDUP_RADIUS_M,
-                          ventana_h=config.DEDUP_WINDOW_H) -> int:
-    f = focos[["lat", "lon", "ts_utc"]].copy()
-    f["ts_utc"] = pd.to_datetime(f["ts_utc"], utc=True)
-    f["dia"] = f["ts_utc"].dt.normalize()
-    total = 0
-    for _, g in f.groupby("dia"):
-        if len(g) < 2:
-            continue
-        x = np.radians(g["lon"].to_numpy()) * 6371000 * np.cos(np.radians(g["lat"].to_numpy()))
-        y = np.radians(g["lat"].to_numpy()) * 6371000
-        t = g["ts_utc"].astype("int64").to_numpy() / 3.6e12   # horas
-        for i, j in cKDTree(np.c_[x, y]).query_pairs(radio_m):
-            if abs(t[i] - t[j]) <= ventana_h:
-                total += 1
-    return total
+                          ventana_h=config.DEDUP_WINDOW_H) -> tuple:
+    """Devuelve (estrictos, en_el_limite).
+
+    estrictos: pares que la deduplicacion deberia haber unido, medidos con SU MISMA definicion
+    (esfera 3D donde ventana_h horas equivalen a radio_m metros; 3% de tolerancia por la
+    proyeccion). Debe ser 0.
+    en_el_limite: pares a menos de radio_m Y a menos de ventana_h por separado (cilindro).
+    Incluye pares que la esfera no une (ej. 800 m y 2 h). Es informativo.
+    """
+    f = focos[["lat", "lon", "ts_utc"]].reset_index(drop=True)
+    x = np.radians(f["lon"].to_numpy()) * 6371000 * np.cos(np.radians(f["lat"].mean()))
+    y = np.radians(f["lat"].to_numpy()) * 6371000
+    t_s = ((pd.to_datetime(f["ts_utc"], utc=True) - pd.Timestamp("1970-01-01", tz="UTC")) / pd.Timedelta(seconds=1)).to_numpy()
+    t_m = t_s / (ventana_h * 3600.0) * radio_m
+    estrictos = len(cKDTree(np.c_[x, y, t_m]).query_pairs(r=radio_m * 0.97))
+    pares = cKDTree(np.c_[x, y]).query_pairs(r=radio_m, output_type="ndarray")
+    limite = int((np.abs(t_s[pares[:, 0]] - t_s[pares[:, 1]]) <= ventana_h * 3600).sum()) if len(pares) else 0
+    return estrictos, limite
 
 
 # ---------------------------------------------------------------- 6. campos
@@ -187,9 +193,15 @@ def chequeo_campos(focos: pd.DataFrame) -> list:
     imposibles = []
     if (focos["frp_mw"] < 0).any():
         imposibles.append(f"{int((focos['frp_mw'] < 0).sum())} con FRP negativo")
-    b = focos["brillo_k"].dropna()
-    if ((b < 250) | (b > 700)).any():
-        imposibles.append(f"{int(((b < 250) | (b > 700)).sum())} con brillo fuera de 250 a 700 K")
+    lo = focos["instrumento"].map(lambda i: RANGO_BRILLO.get(i, (250, 700))[0])
+    hi = focos["instrumento"].map(lambda i: RANGO_BRILLO.get(i, (250, 700))[1])
+    mal_b = focos[(focos["brillo_k"] < lo) | (focos["brillo_k"] > hi)]
+    if len(mal_b):
+        ej = "; ".join(f"{r.instrumento}:{r.satelite} {r.brillo_k:.0f} K el {str(r.ts_utc)[:10]}" for r in mal_b.head(3).itertuples())
+        est = "error" if len(mal_b) > TOLERANCIA * n else "aviso"
+        out.append(chequeo(est, "brillo fuera de rango",
+                           f"{len(mal_b)} de {n} ({len(mal_b) / n:.3%}) fuera del rango fisico del sensor (ej. {ej}). "
+                           "El brillo no entra al modelo."))
     fut = int((pd.to_datetime(focos["ts_utc"], utc=True) > pd.Timestamp.now(tz="UTC") + pd.Timedelta(days=1)).sum())
     if fut:
         imposibles.append(f"{fut} con fecha futura")
@@ -206,11 +218,17 @@ def chequeo_clima(clima: pd.DataFrame, focos_fin: pd.Timestamp | None = None) ->
     malos = []
     for v, (lo, hi) in RANGOS_CLIMA.items():
         if v in c:
-            k = int(((c[v] < lo) | (c[v] > hi)).sum())
-            if k:
-                malos.append(f"{v}: {k} fuera de [{lo}, {hi}]")
-    out.append(chequeo("error" if malos else "ok", "clima rangos fisicos",
-                       "; ".join(malos) if malos else "todas las variables dentro de rangos fisicos"))
+            m = c[(c[v] < lo) | (c[v] > hi)]
+            if len(m):
+                tol = "error" if len(m) > TOLERANCIA * len(c) else "aviso"
+                ej = "; ".join(f"{r[v]:.0f} en {r['point_id']} el {str(r['fecha'])[:10]}"
+                               for _, r in m.head(3).iterrows())
+                malos.append((tol, f"{v}: {len(m)} fuera de [{lo}, {hi}] (ej. {ej})"))
+    est = "error" if any(t == "error" for t, _ in malos) else ("aviso" if malos else "ok")
+    out.append(chequeo(est, "clima rangos fisicos",
+                       "; ".join(d for _, d in malos) + (". Pocos valores aislados: se informan, no se corrigen."
+                                                          if est == "aviso" else "")
+                       if malos else "todas las variables dentro de rangos fisicos"))
     cols = [v for v in RANGOS_CLIMA if v in c]
     nul = {v: float(c[v].isna().mean()) for v in cols if c[v].isna().mean() > 0.01}
     out.append(chequeo("aviso" if nul else "ok", "clima nulos",
@@ -256,7 +274,7 @@ def contra_firms(raw_root: Path, n: int, seed: int = 7) -> list:
         except Exception as exc:   # red o clave: se informa, no se oculta
             out.append(chequeo("aviso", f"contra FIRMS {f.parent.name} {m.group(1)}", f"no se pudo consultar: {exc}"))
             continue
-        remoto = max(0, texto.count("\n") - 1) if texto.lstrip().lower().startswith("latitude") else -1
+        remoto = max(0, len(texto.strip().splitlines()) - 1) if texto.lstrip().lower().startswith("latitude") else -1
         local = filas_csv(f)
         ok = remoto == local
         out.append(chequeo("ok" if ok else "error", f"contra FIRMS {f.parent.name} {m.group(1)}",
@@ -271,10 +289,14 @@ def embudo(raw_root: Path, focos: pd.DataFrame) -> list:
     filas = {d.name: sum(filas_csv(f) for f in d.glob("*.csv")) for d in sorted(raw_root.iterdir()) if d.is_dir()}
     total = sum(filas.values())
     detalle = ", ".join(f"{k} {v}" for k, v in filas.items())
-    pct = f"{len(focos) / total:.0%}" if total else "s/d"
+    et = config.PROCESSED / "embudo.json"
+    etapas = ""
+    if et.exists():
+        e = json.loads(et.read_text())
+        etapas = (f". Etapas: tipo no vegetacion -{e['no_vegetacion']}, fuentes fijas -{e['fuentes_fijas']}, "
+                  f"duplicados entre sensores -{e['duplicados']}, fuera de Catamarca -{e['fuera_catamarca']}")
     return [chequeo("ok", "embudo de datos",
-                    f"{total} detecciones crudas ({detalle}) -> {len(focos)} focos finales ({pct}) "
-                    "tras filtrar tipo, fuentes fijas, deduplicar y recortar a Catamarca")]
+                    f"{total} detecciones crudas ({detalle}) -> {len(focos)} focos finales{etapas}")]
 
 
 def auditar(focos: pd.DataFrame, clima: pd.DataFrame | None, raw_root: Path | None = None,
@@ -284,9 +306,12 @@ def auditar(focos: pd.DataFrame, clima: pd.DataFrame | None, raw_root: Path | No
         checks += chequeo_descarga(raw_root)
     cob = cobertura_focos(focos)
     checks += chequeo_cobertura(focos, cob)
-    d = duplicados_residuales(focos)
-    checks.append(chequeo("error" if d > 0.005 * len(focos) else ("aviso" if d else "ok"), "duplicados residuales",
-                          f"{d} pares de focos a menos de {config.DEDUP_RADIUS_M} m y {config.DEDUP_WINDOW_H} h"))
+    est, lim = duplicados_residuales(focos)
+    estado = "error" if est else ("aviso" if lim > 0.02 * len(focos) else "ok")
+    checks.append(chequeo(estado, "duplicados residuales",
+                          f"{est} pares que la deduplicacion deberia haber unido (debe ser 0). "
+                          f"{lim} pares ({lim / max(1, len(focos)):.1%}) quedan en el limite: cerca en espacio y tiempo "
+                          "pero fuera de la esfera de union (efecto marginal)."))
     checks += chequeo_campos(focos)
     if clima is not None:
         checks += chequeo_clima(clima, pd.to_datetime(focos["fecha_utc"]).max())

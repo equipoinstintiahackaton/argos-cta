@@ -94,3 +94,14 @@ def test_solo_vegetacion_y_fuentes_fijas():
     filtrado, fijas = harmonize.quitar_fuentes_fijas(todo)
     assert len(fijas) == 1
     assert len(filtrado) == 3
+
+
+def test_deduplicacion_no_une_dias_distintos_en_el_mismo_lugar():
+    """Regresion: con datetimes en microsegundos (pandas 3) el tiempo se perdia y un lugar con
+    focos en dias distintos quedaba como un solo foco."""
+    raw = pd.DataFrame({
+        "latitude": [-27.0] * 3, "longitude": [-66.0] * 3,
+        "acq_date": ["2024-08-01", "2024-08-02", "2024-08-10"], "acq_time": ["1800"] * 3,
+        "bright_ti4": [330.0] * 3, "confidence": ["n"] * 3, "frp": [5.0] * 3,
+        "satellite": ["N"] * 3, "daynight": ["D"] * 3, "type": [0] * 3})
+    assert len(harmonize.deduplicate(harmonize.normalize(raw, "VIIRS"))) == 3

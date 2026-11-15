@@ -22,14 +22,14 @@
     "doy_cos"
   ],
   "thresholds": {
-    "medio": 0.002052148338407278,
-    "alto": 0.008318992331624031,
-    "critico": 0.024667907506227493
+    "medio": 0.0021501509472727776,
+    "alto": 0.013388281688094139,
+    "critico": 0.03072766773402691
   },
   "quantiles": {
     "medio": 0.8,
     "alto": 0.95,
     "critico": 0.99
   },
-  "best_iteration": 50
+  "best_iteration": 165
 }

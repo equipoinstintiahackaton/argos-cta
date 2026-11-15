@@ -31,9 +31,23 @@ from sklearn.metrics import average_precision_score, roc_auc_score
 
 from pipeline import config
 from pipeline.dataset import FEATURES
-from pipeline.train import MODELS, weighted_quantile
+from pipeline.train import MODELS
 
 MODELOS = ["modelo", "clim_celda_mes", "historial_celda", "fuego_7d"]
+
+
+def recall_top(y, p, w, frac, seed=0):
+    """Recall y lift dentro del `frac` de celda-dias (por peso) con mayor puntaje.
+
+    Los empates se rompen al azar: un baseline que da 0 a casi todas las celdas NO puede
+    reclamar 100% de recall por "seleccionar todo". Con puntaje constante el recall esperado es `frac`.
+    """
+    y, p, w = np.asarray(y), np.asarray(p, dtype=float), np.asarray(w, dtype=float)
+    orden = np.lexsort((np.random.default_rng(seed).random(len(p)), -p))
+    sel = orden[np.cumsum(w[orden]) / w.sum() <= frac]
+    pos, base = float((w * y).sum()), float((w * y).sum() / w.sum())
+    tp, pred = float((w[sel] * y[sel]).sum()), float(w[sel].sum())
+    return (tp / pos if pos else None), ((tp / pred) / base if pred and base else None)
 
 
 def metricas(y, p, w, con_brier=False) -> dict:
@@ -45,15 +59,11 @@ def metricas(y, p, w, con_brier=False) -> dict:
            "pr_auc": float(average_precision_score(y, p, sample_weight=w)),
            "roc_auc": float(roc_auc_score(y, p, sample_weight=w)),
            "brier": float((w * (p - y) ** 2).sum() / w.sum()) if con_brier else None}
-    pos = float((w * y).sum())
-    for k, q in (("top5", 0.95), ("top10", 0.90)):
-        t = weighted_quantile(p, w, q)
-        sel = p >= t
-        pred = float((w * sel).sum())
-        tp = float((w * y * sel).sum())
-        out[f"recall_{k}"] = tp / pos if pos else None
+    for k, frac in (("top5", 0.05), ("top10", 0.10)):
+        rec, lift = recall_top(y, p, w, frac)
+        out[f"recall_{k}"] = rec
         if k == "top5":
-            out["lift_top5"] = (tp / pred) / base if pred and base else None
+            out["lift_top5"] = lift
     return out
 
 

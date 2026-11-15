@@ -10,6 +10,7 @@ Diferencias que se resuelven aca:
   Se agrupan detecciones cercanas en espacio (<= DEDUP_RADIUS_M) y tiempo
   (<= DEDUP_WINDOW_H) y se conserva un registro representativo por grupo.
 """
+import json
 from pathlib import Path
 
 import h3
@@ -102,7 +103,10 @@ def deduplicate(df: pd.DataFrame) -> pd.DataFrame:
         return df
     df = df.reset_index(drop=True)
     x, y = _to_xy_m(df["lat"].to_numpy(), df["lon"].to_numpy())
-    t_s = df["ts_utc"].astype("int64").to_numpy() / 1e9
+    # Segundos desde 1970 sin depender de la resolucion del datetime: desde pandas 3 la resolucion
+    # por defecto es microsegundos y astype("int64") / 1e9 dejaba el tiempo casi en cero, con lo que
+    # se unian detecciones cercanas en el espacio aunque fueran de dias distintos.
+    t_s = ((df["ts_utc"] - pd.Timestamp("1970-01-01", tz="UTC")) / pd.Timedelta(seconds=1)).to_numpy()
     t_m = t_s / (config.DEDUP_WINDOW_H * 3600.0) * config.DEDUP_RADIUS_M
     pts = np.column_stack([x, y, t_m])
 
@@ -198,13 +202,16 @@ def run() -> pd.DataFrame:
     antes = len(todo)
     todo = solo_vegetacion(todo)
     print(f"Filtro de tipo FIRMS: {antes - len(todo)} detecciones no-vegetacion descartadas")
+    n_veg = len(todo)
     n_previo = len(todo)
     todo, fijas = quitar_fuentes_fijas(todo)
+    n_previo_dedup = len(todo)
     print(f"Fuentes termicas fijas: {len(fijas)} bloques de ~2 km, {n_previo - len(todo)} detecciones descartadas")
     if len(fijas):
         print(fijas.head(8).rename(columns={"bl": "lat", "bo": "lon"}).to_string(index=False))
         fijas.to_parquet(config.PROCESSED / "fuentes_fijas.parquet", index=False)
     dedup = deduplicate(todo)
+    n_dedup = len(dedup)
     final = finalize(dedup)
     g = config.PROCESSED / "grid.parquet"
     if g.exists():
@@ -214,6 +221,10 @@ def run() -> pd.DataFrame:
         final = final[dentro].reset_index(drop=True)
     out = config.PROCESSED / "focos.parquet"
     final.to_parquet(out, index=False)
+    (config.PROCESSED / "embudo.json").write_text(json.dumps({
+        "crudas": int(antes), "no_vegetacion": int(antes - n_veg), "fuentes_fijas": int(n_veg - n_previo_dedup),
+        "duplicados": int(n_previo_dedup - n_dedup), "fuera_catamarca": int(n_dedup - len(final)),
+        "finales": int(len(final))}))
     print(f"Total: {antes} -> {len(final)} focos tras deduplicar. Guardado en {out}")
     return final
 
