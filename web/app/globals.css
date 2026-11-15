@@ -370,3 +370,53 @@ a.tel { text-decoration: none; }
 .idioma { display: inline-flex; padding: 3px; border-radius: 999px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.16); }
 .idioma button { border: 0; background: transparent; color: #fff; font-size: 12px; font-weight: 700; padding: 5px 10px; border-radius: 999px; cursor: pointer; }
 .idioma button.on { background: var(--argos-secondary); }
+
+/* barras horizontales (departamentos) */
+.hbarras { display: flex; flex-direction: column; gap: 6px; }
+.hb-max { font-size: 11px; color: var(--argos-text-secondary); text-align: right; }
+.hb-fila { display: grid; grid-template-columns: minmax(90px, 170px) 1fr 52px; align-items: center; gap: 10px; font-size: 12px; }
+.hb-et { color: var(--argos-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hb-pista { height: 14px; background: rgba(255,255,255,.06); border-radius: 4px; overflow: hidden; }
+.hb-pista i { display: block; height: 100%; border-radius: 4px; }
+.hb-val { text-align: right; color: #d0d5d9; font-variant-numeric: tabular-nums; }
+
+/* ======== Responsive telefono ======== */
+html, body { overflow-x: hidden; }
+img, svg { max-width: 100%; }
+@media (max-width: 860px) {
+  .gl-lema { display: none; }
+  .gl-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .gl-head .idioma { display: inline-flex; }
+  .gl-hello { font-size: 12px; } .gl-who { font-size: 11px; max-width: 46vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
+  .kpis { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .kpi { padding: 12px; } .kpi b { font-size: 22px; }
+  .grid3 { grid-template-columns: 1fr; }
+  .pagina { padding: 8px 0 24px; }
+  .titulo { font-size: 24px; }
+  .filtro { display: grid !important; grid-template-columns: 1fr 1fr; gap: 10px !important; }
+  .filtro label, .filtro select { width: 100%; }
+  .filtro select { margin-top: 4px; }
+  .card { padding: 14px; }
+  .card table, .tabla { display: block; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
+  .tabla td[style*="nowrap"] { white-space: nowrap; }
+  .rango { width: 180px; }
+  .gl-hero h1 { font-size: clamp(30px, 9vw, 44px); }
+  .gl-temps { overflow-x: auto; }
+  .gl-card.big .gl-bigtemp { font-size: 64px; }
+  .gl-main .app.embebido { min-height: 420px; }
+  .gl-main .app.embebido .panel { max-height: 58%; padding: 14px; }
+  .login, .caja-login { width: 100%; }
+}
+@media (max-width: 520px) {
+  .lp-nav { width: calc(100% - 24px); margin-top: 12px; gap: 8px; }
+  .lp-nav .lp-marca span { font-size: 15px; }
+  .lp-nav .lp-btn { padding: 7px 14px; font-size: 13px; }
+  .lp-hero-contenido { padding: 0 20px; }
+  .lp-kpis { padding: 0 12px; gap: 10px; }
+  .lp-kpis b { font-size: 24px; } .lp-kpis b.chico { font-size: 15px; }
+  .lp-cta, .lp-sec { width: 100%; justify-content: center; text-align: center; }
+  .lp-marco { aspect-ratio: auto; min-height: 520px; }
+  .lp-marco-pie { flex-direction: column; align-items: stretch; gap: 12px; }
+  .hb-fila { grid-template-columns: 96px 1fr 44px; gap: 8px; }
+  .menu { gap: 8px; }
+}
