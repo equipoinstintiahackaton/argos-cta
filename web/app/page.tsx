@@ -7,6 +7,9 @@ import Pie from "../components/Pie";
 import { contar, ultimoFoco } from "../lib/resumen";
 import { fecha, num } from "../lib/formato";
 
+const DEPTOS = ["Capital", "Ambato", "Ancasti", "Andalgala", "Antofagasta de la Sierra", "Belen", "Capayan", "El Alto",
+  "Fray Mamerto Esquiu", "La Paz", "Paclin", "Poman", "Santa Maria", "Santa Rosa", "Tinogasta", "Valle Viejo"];
+
 export default function Landing() {
   const [focos, setFocos] = useState<number | null>(null);
   const [incendios, setIncendios] = useState<number | null>(null);
@@ -27,19 +30,16 @@ export default function Landing() {
         <section className="hero">
           <div>
             <h1>ARGOS</h1>
-            <p className="desc">ALERTA DE RIESGO GEOESPACIAL Y OBSERVACION SATELITAL</p>
-            <p className="lema">Conocer para prevenir.</p>
+            <h2>Alerta de Riesgo Geoespacial y Observacion Satelital</h2>
             <p className="texto">
-              Tecnologia satelital al servicio de la prevencion y el monitoreo forestal en Catamarca. ARGOS combina trece años de
-              detecciones de calor MODIS y VIIRS con el clima para estimar donde es mas probable que aparezcan focos en los proximos
-              7 dias, y asi priorizar donde mirar.
+              Conocer para prevenir. Descubri como evolucionan los incendios forestales en Catamarca mediante informacion
+              satelital, mapas y analisis de datos.
             </p>
             <div className="botones">
-              <Link href="/dashboard" className="boton">Ver el dashboard</Link>
+              <Link href="/dashboard" className="boton">Explorar Catamarca</Link>
               <Link href="/registro" className="boton sec">Registro de incendios</Link>
             </div>
           </div>
-          <img src="/logo.png" alt="Logo de ARGOS" />
         </section>
 
         <div className="kpis">
@@ -49,32 +49,39 @@ export default function Landing() {
           <div className="kpi"><b style={{ fontSize: 18 }}>{ultimo ? fecha(ultimo) : "s/d"}</b><span>ultimo foco satelital recibido</span></div>
         </div>
 
-        <section className="card">
-          <h2>Como funciona</h2>
+        <section className="card" id="incendios">
+          <h2>Los incendios en Catamarca</h2>
+          <p className="nota">Conoce el impacto de los incendios forestales en la provincia y su evolucion a lo largo de los años.</p>
           <div className="grid3" style={{ marginTop: 12 }}>
-            <div className="tarjeta"><span className="num">1</span><h3>Observa</h3>
-              <p>Reune las detecciones de calor de MODIS y VIIRS (NASA FIRMS) y el clima diario de NASA POWER, y las depura: duplicados, fuentes industriales fijas y focos fuera de la provincia.</p></div>
-            <div className="tarjeta"><span className="num">2</span><h3>Calcula</h3>
-              <p>Un modelo de aprendizaje automatico, validado año por año contra reglas simples, estima el riesgo de cada celda de 36 km2 y la probabilidad de foco por departamento.</p></div>
-            <div className="tarjeta"><span className="num">3</span><h3>Alerta</h3>
-              <p>Una escala de 7 niveles, de verde a negro, muestra donde mirar primero. Cada nivel se mide contra lo que paso realmente en datos que el modelo no vio.</p></div>
+            <div className="tarjeta"><h3>🌎 Medio ambiente</h3><p>Comprender como los incendios afectan las sierras, los valles y los bosques de Catamarca.</p></div>
+            <div className="tarjeta"><h3>🛰️ Tecnologia NASA</h3><p>Usamos informacion satelital (MODIS, VIIRS y proximamente GOES-19) para estudiar los focos de calor en el territorio.</p></div>
+            <div className="tarjeta"><h3>📊 Datos historicos</h3><p>Trece años de detecciones depuradas y un modelo que estima donde es mas probable que aparezcan focos en los proximos 7 dias.</p></div>
           </div>
         </section>
 
-        <section className="card">
-          <h2>Fuentes de datos</h2>
-          <div className="grid3" style={{ marginTop: 12 }}>
-            <div className="tarjeta"><h3>NASA FIRMS</h3><p>Focos activos de MODIS y VIIRS, desde 2012, con actualizacion cercana al tiempo real.</p></div>
-            <div className="tarjeta"><h3>NASA POWER</h3><p>Temperatura, humedad, viento y lluvia diarios para estimar la sequedad del combustible.</p></div>
-            <div className="tarjeta"><h3>GOES-19 <span className="proximo">en integracion</span></h3><p>Satelite geoestacionario con deteccion de fuego cada 10 minutos, para alerta temprana a confirmar.</p></div>
+        <section className="card" id="mapas">
+          <h2>Mapa de incendios de Catamarca</h2>
+          <div className="mapa-sat">
+            <img src="/catamarca-satelital.jpg" alt="Mapa satelital de la provincia de Catamarca" />
+            <div>
+              <h3 className="h3">🗺️ Mapa interactivo de Catamarca</h3>
+              <p className="nota">Explora la distribucion de los focos de calor y el riesgo estimado en los 16 departamentos.</p>
+              <div className="deptos">{DEPTOS.map((d) => <span key={d}>{d}</span>)}</div>
+              <Link href="/dashboard#mapa" className="boton">Abrir el mapa</Link>
+            </div>
           </div>
         </section>
 
-        <section className="card">
-          <h2>Para quienes esta pensado</h2>
-          <p className="nota">Bomberos, bomberos voluntarios, brigadas forestales y organismos provinciales de emergencia. ARGOS prioriza donde mirar: la mayoria de las celdas en alerta no tendra fuego, y por eso complementa y no reemplaza el criterio operativo.</p>
+        <section className="card" id="proyecto">
+          <h2>Sobre ARGOS</h2>
+          <p className="nota">
+            ARGOS (Alerta de Riesgo Geoespacial y Observacion Satelital) es el proyecto de un equipo catamarqueño participante del
+            NASA Space Apps Challenge. Nuestro objetivo es usar la tecnologia y los datos satelitales para comprender mejor los
+            incendios forestales en Catamarca y generar conciencia ambiental en toda la provincia. ARGOS prioriza donde mirar:
+            complementa y no reemplaza el criterio operativo de bomberos y brigadas.
+          </p>
           <div className="botones" style={{ marginTop: 10 }}>
-            <Link href="/estadisticas" className="boton sec">Ver estadisticas y confiabilidad</Link>
+            <Link href="/estadisticas" className="boton sec">Estadisticas y confiabilidad</Link>
             <Link href="/login" className="boton sec">Ingresar</Link>
           </div>
         </section>
