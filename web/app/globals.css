@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap');
 /* ARGOS | identidad visual. Los colores de la escala de riesgo (verde a negro) viven en lib/bandas.ts
    y no se mezclan con el naranja de marca. */
 :root {
@@ -285,64 +284,68 @@ a.tel { text-decoration: none; }
 }
 
 /* ======== Landing: liquid glass editorial ======== */
-.lp { background: #000; color: #fff; }
-.lp .serif { font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; }
-.lp em { font-style: italic; color: var(--argos-light); }
+.lp { background: var(--argos-background); color: var(--argos-text); font-family: var(--argos-font); }
+.lp .serif { font-family: var(--argos-font); font-weight: 700; }
+.lp em { font-style: normal; color: var(--argos-primary); }
 .glass { background: rgba(255,255,255,.01); background-blend-mode: luminosity; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); box-shadow: inset 0 1px 1px rgba(255,255,255,.1); position: relative; overflow: hidden; }
 .glass::before { content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1.4px; background: linear-gradient(180deg, rgba(255,255,255,.45) 0%, rgba(255,255,255,.15) 20%, rgba(255,255,255,0) 40%, rgba(255,255,255,0) 60%, rgba(255,255,255,.15) 80%, rgba(255,255,255,.45) 100%); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none; }
 .lp-hero { position: relative; min-height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-.lp-hero-bg { position: absolute; inset: 0; background: #000 url('/catamarca-satelital.jpg') center bottom / cover no-repeat; opacity: 0; animation: lp-fadein 1.4s ease .2s forwards, lp-zoom 30s ease-in-out infinite alternate; }
-.lp-hero-velo { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,.55) 0%, rgba(0,0,0,.35) 40%, rgba(0,0,0,.85) 100%); }
+.lp-hero-bg { position: absolute; inset: 0; background: var(--argos-background) url('/catamarca-satelital.jpg') center bottom / cover no-repeat; opacity: 0; animation: lp-fadein 1.4s ease .2s forwards, lp-zoom 30s ease-in-out infinite alternate; }
+.lp-hero-velo { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(16,19,22,.6) 0%, rgba(16,19,22,.4) 40%, #101316 100%); }
 .lp-nav { position: relative; z-index: 3; max-width: 1024px; width: calc(100% - 48px); margin: 24px auto 0; padding: 12px 24px; border-radius: 999px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .lp-marca { display: flex; align-items: center; gap: 10px; color: #fff; text-decoration: none; font-weight: 700; font-size: 18px; letter-spacing: 2px; }
+.lp-marca span { color: var(--argos-primary); }
 .lp-marca img { width: 30px; height: 30px; border-radius: 8px; }
 .lp-links { display: flex; gap: 32px; margin-right: auto; margin-left: 32px; }
-.lp-links a { color: rgba(255,255,255,.8); text-decoration: none; font-size: 14px; font-weight: 500; }
-.lp-links a:hover { color: #fff; }
+.lp-links a { color: var(--argos-text); text-decoration: none; font-size: 14px; font-weight: 500; }
+.lp-links a:hover { color: var(--argos-primary); }
 .lp-btn { display: inline-block; border-radius: 999px; padding: 10px 26px; color: #fff; text-decoration: none; font-size: 14px; font-weight: 600; transition: background .3s; }
-.lp-btn:hover { background: rgba(255,255,255,.06); }
+.lp-btn { background: rgba(25,30,35,.55); border: 1px solid var(--argos-border); }
+.lp-btn:hover { background: var(--argos-secondary); border-color: var(--argos-secondary); }
+.lp-cta { background: rgba(25,30,35,.55); border: 1px solid var(--argos-border); }
 .lp-hero-contenido { position: relative; z-index: 2; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px 24px 20px; gap: 22px; }
-.lp-hero h1 { font-size: clamp(48px, 9vw, 128px); line-height: 1; letter-spacing: -.02em; }
-.lp-sub { max-width: 620px; font-size: 15px; line-height: 1.7; color: rgba(255,255,255,.88); }
+.lp-hero h1 { font-size: clamp(44px, 8vw, 112px); line-height: 1.02; letter-spacing: -.01em; font-weight: 700; }
+.lp-sub { max-width: 640px; font-size: 16px; line-height: 1.7; color: var(--argos-light); font-weight: 700; }
 .lp-cta { display: inline-flex; align-items: center; gap: 14px; border-radius: 999px; padding: 8px 8px 8px 28px; color: #fff; text-decoration: none; font-weight: 600; font-size: 15px; }
-.lp-cta i { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: #fff; color: #000; }
+.lp-cta i { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: var(--argos-secondary); color: #fff; }
 .lp-sec { padding: 12px 32px; }
 .lp-kpis { position: relative; z-index: 2; display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; max-width: 1024px; width: calc(100% - 48px); margin: 0 auto 40px; }
-.lp-kpis > div { border-radius: 20px; padding: 18px 20px; }
-.lp-kpis b { display: block; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: 38px; color: #fff; }
-.lp-kpis b.chico { font-size: 22px; padding: 8px 0; }
-.lp-kpis span { font-size: 12px; color: rgba(255,255,255,.6); }
-.lp-label { color: rgba(255,255,255,.4); font-size: 13px; letter-spacing: .18em; text-transform: uppercase; margin-bottom: 14px; }
-.lp-label.chico { font-size: 11px; color: rgba(255,255,255,.5); margin-bottom: 10px; }
-.lp-sec-about { background: radial-gradient(ellipse at top, rgba(255,255,255,.03) 0%, transparent 70%), #000; padding: 140px 24px 40px; max-width: 1152px; margin: 0 auto; }
-.lp-h-grande { font-size: clamp(34px, 5.4vw, 72px); line-height: 1.1; letter-spacing: -.01em; }
+.lp-kpis > div { border-radius: 14px; padding: 18px 20px; background: var(--argos-card); border-bottom: 3px solid var(--argos-secondary); }
+.lp-kpis b { display: block; font-weight: 700; font-size: 34px; color: var(--argos-light); }
+.lp-kpis b.chico { font-size: 20px; padding: 8px 0; }
+.lp-kpis span { font-size: 12px; color: var(--argos-text-secondary); }
+.lp-label { color: var(--argos-primary); font-weight: 700; font-size: 13px; letter-spacing: .18em; text-transform: uppercase; margin-bottom: 14px; }
+.lp-label.chico { font-size: 11px; color: var(--argos-primary); margin-bottom: 10px; }
+.lp-sec-about { background: radial-gradient(ellipse at top, rgba(255,112,46,.05) 0%, transparent 70%), var(--argos-background); padding: 140px 24px 40px; max-width: 1152px; margin: 0 auto; }
+.lp-h-grande { font-size: clamp(30px, 4.6vw, 60px); line-height: 1.15; font-weight: 700; }
 .lp-destacado { max-width: 1152px; margin: 0 auto; padding: 32px 24px 100px; }
-.lp-marco { position: relative; border-radius: 28px; overflow: hidden; aspect-ratio: 16 / 9; min-height: 420px; }
+.lp-marco { position: relative; border-radius: 14px; overflow: hidden; aspect-ratio: 16 / 9; min-height: 420px; }
 .lp-marco img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.lp-marco-velo { position: absolute; inset: 0; background: linear-gradient(0deg, rgba(0,0,0,.7), transparent 60%); }
+.lp-marco-velo { position: absolute; inset: 0; background: linear-gradient(0deg, rgba(16,19,22,.85), transparent 60%); }
 .lp-marco-pie { position: absolute; left: 0; right: 0; bottom: 0; padding: 40px; display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; flex-wrap: wrap; }
-.lp-tarjeta-g { max-width: 440px; border-radius: 20px; padding: 28px; font-size: 15px; line-height: 1.6; }
+.lp-tarjeta-g { max-width: 440px; border-radius: 14px; padding: 26px; font-size: 15px; line-height: 1.6; background: rgba(25,30,35,.78); border-bottom: 3px solid var(--argos-secondary); color: var(--argos-text); }
+.lp-tarjeta-g p:not(.lp-label) { color: var(--argos-text-secondary); }
 .lp-filo { max-width: 1152px; margin: 0 auto; padding: 100px 24px; }
-.lp-h-medio { font-size: clamp(44px, 7vw, 100px); letter-spacing: -.02em; margin-bottom: 70px; }
+.lp-h-medio { font-size: clamp(36px, 6vw, 80px); font-weight: 700; margin-bottom: 60px; }
 .lp-filo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
-.lp-img-redondeada { border-radius: 28px; overflow: hidden; aspect-ratio: 4 / 3; }
+.lp-img-redondeada { border-radius: 14px; overflow: hidden; aspect-ratio: 4 / 3; }
 .lp-img-redondeada img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .lp-filo-textos { display: flex; flex-direction: column; gap: 32px; }
-.lp-filo-textos p:not(.lp-label) { color: rgba(255,255,255,.72); font-size: 17px; line-height: 1.7; }
-.lp-filo-textos hr { border: 0; height: 1px; background: rgba(255,255,255,.1); }
+.lp-filo-textos p:not(.lp-label) { color: var(--argos-text-secondary); font-size: 16px; line-height: 1.7; }
+.lp-filo-textos hr { border: 0; height: 1px; background: var(--argos-border); }
 .lp-serv { max-width: 1152px; margin: 0 auto; padding: 100px 24px 120px; }
 .lp-serv-cab { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 40px; }
-.lp-serv-cab h2 { font-size: clamp(30px, 4vw, 48px); letter-spacing: -.01em; font-weight: 500; }
-.lp-serv-cab span { color: rgba(255,255,255,.4); font-size: 14px; }
+.lp-serv-cab h2 { font-size: clamp(28px, 4vw, 44px); font-weight: 700; }
+.lp-serv-cab span { color: var(--argos-primary); font-size: 14px; font-weight: 700; }
 .lp-serv-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
-.lp-card { border-radius: 24px; display: block; }
-.lp-card-img { aspect-ratio: 16 / 10; overflow: hidden; background: #000; }
+.lp-card { border-radius: 14px; display: block; background: var(--argos-card); border: 1px solid var(--argos-border); border-bottom: 3px solid var(--argos-secondary); }
+.lp-card-img { aspect-ratio: 16 / 10; overflow: hidden; background: var(--argos-surface); }
 .lp-card-img img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .7s; }
 .lp-card-img.claro { background: #fff; } .lp-card-img.claro img { object-fit: contain; }
 .lp-card:hover .lp-card-img img { transform: scale(1.05); }
 .lp-card-cuerpo { padding: 24px; }
-.lp-card-cuerpo h3 { font-size: 22px; font-weight: 500; letter-spacing: -.01em; margin-bottom: 10px; }
-.lp-card-cuerpo p:not(.lp-label) { color: rgba(255,255,255,.55); font-size: 14px; line-height: 1.6; }
+.lp-card-cuerpo h3 { font-size: 20px; font-weight: 700; color: var(--argos-light); margin-bottom: 10px; }
+.lp-card-cuerpo p:not(.lp-label) { color: var(--argos-text-secondary); font-size: 14px; line-height: 1.6; }
 .lp-reveal { opacity: 0; transform: translateY(40px); transition: opacity .8s cubic-bezier(.16,1,.3,1), transform .8s cubic-bezier(.16,1,.3,1); }
 .lp-reveal.visto { opacity: 1; transform: none; }
 @keyframes lp-fadein { to { opacity: 1; } }
