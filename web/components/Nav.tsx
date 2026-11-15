@@ -3,18 +3,21 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getSupabase } from "../lib/supabase";
+import { useIdioma } from "../lib/i18n";
+import Idioma from "./Idioma";
 
 export type Activo = "inicio" | "dashboard" | "registro" | "estadisticas" | "login";
 
-const LINKS: { id: Activo; href: string; label: string }[] = [
-  { id: "inicio", href: "/", label: "Inicio" },
-  { id: "dashboard", href: "/dashboard", label: "Dashboard" },
-  { id: "registro", href: "/registro", label: "Registro de incendios" },
-  { id: "estadisticas", href: "/estadisticas", label: "Estadisticas" },
+const LINKS: { id: Activo; href: string; es: string; en: string }[] = [
+  { id: "inicio", href: "/", es: "Inicio", en: "Home" },
+  { id: "dashboard", href: "/dashboard", es: "Dashboard", en: "Dashboard" },
+  { id: "registro", href: "/registro", es: "Registro de incendios", en: "Fire registry" },
+  { id: "estadisticas", href: "/estadisticas", es: "Estadisticas", en: "Statistics" },
 ];
 
 export default function Nav({ activo }: { activo?: Activo }) {
   const [email, setEmail] = useState<string | null>(null);
+  const { tr } = useIdioma();
 
   useEffect(() => {
     const sb = getSupabase();
@@ -33,14 +36,15 @@ export default function Nav({ activo }: { activo?: Activo }) {
         </div>
       </Link>
       <nav className="menu">
-        {LINKS.filter((l) => (email ? l.id !== "inicio" : l.id === "inicio")).map((l) => <Link key={l.id} href={l.href} className={activo === l.id ? "on" : ""}>{l.label}</Link>)}
+        <Idioma />
+        {LINKS.filter((l) => (email ? l.id !== "inicio" : l.id === "inicio")).map((l) => <Link key={l.id} href={l.href} className={activo === l.id ? "on" : ""}>{tr(l.es, l.en)}</Link>)}
         {email ? (
           <>
             <span className="usuario">{email}</span>
-            <button className="salir" onClick={async () => { await getSupabase()?.auth.signOut(); window.location.href = "/"; }}>Salir</button>
+            <button className="salir" onClick={async () => { await getSupabase()?.auth.signOut(); window.location.href = "/"; }}>{tr("Salir", "Sign out")}</button>
           </>
         ) : (
-          <Link href="/login" className="entrar">Ingresar</Link>
+          <Link href="/login" className="entrar">{tr("Ingresar", "Sign in")}</Link>
         )}
       </nav>
     </header>

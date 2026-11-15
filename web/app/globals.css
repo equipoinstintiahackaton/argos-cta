@@ -365,3 +365,8 @@ a.tel { text-decoration: none; }
 .lp-marco img.lp-marco-img { position: absolute; top: 0; bottom: 0; left: 50%; width: auto; height: 100%; max-width: 100%; transform: translateX(-50%); object-fit: contain; }
 .gl-main .app.embebido .mapa.base-osm .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(.85) contrast(.9) saturate(.6); }
 @media (max-width: 860px) { .lp-hero-bg { background-size: cover; background-position: center; } }
+
+/* selector de idioma */
+.idioma { display: inline-flex; padding: 3px; border-radius: 999px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.16); }
+.idioma button { border: 0; background: transparent; color: #fff; font-size: 12px; font-weight: 700; padding: 5px 10px; border-radius: 999px; cursor: pointer; }
+.idioma button.on { background: var(--argos-secondary); }

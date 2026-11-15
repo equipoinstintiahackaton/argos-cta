@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { cellToBoundary, cellToLatLng } from "h3-js";
-import { BANDAS, infoBanda } from "../lib/bandas";
+import { BANDAS, infoBanda, nombreBanda } from "../lib/bandas";
+import { useIdioma, motivo as motivoTr } from "../lib/i18n";
 import { getSupabase } from "../lib/supabase";
 import { traerTodo } from "../lib/datos";
 
@@ -14,6 +15,8 @@ type FocoRec = { foco_id: number; lat: number; lon: number; ts_utc: string; hora
 type Escala = { banda: string; orden: number; frecuencia_observada: number | null; lift: number | null; frac_celdas_dia: number };
 
 export default function Dashboard({ embebido = false }: { embebido?: boolean }) {
+  const { tr, lang } = useIdioma();
+  const bl = (id: string | null | undefined) => nombreBanda(id, lang);
   const mapaRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
   const capasRef = useRef<any[]>([]);
@@ -37,13 +40,13 @@ export default function Dashboard({ embebido = false }: { embebido?: boolean }) 
   // 1) Datos que no dependen de la fecha
   useEffect(() => {
     const sb = getSupabase();
-    if (!sb) { setError("Faltan NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_ANON_KEY."); return; }
+    if (!sb) { setError(tr("Faltan NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_ANON_KEY.", "Missing NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.")); return; }
     (async () => {
       try {
         const { data: f, error: e1 } = await sb.from("riesgo_depto").select("fecha").order("fecha", { ascending: false }).limit(400);
         if (e1) throw e1;
         const lista = Array.from(new Set((f ?? []).map((x: any) => x.fecha as string)));
-        if (lista.length === 0) { setError("Todavia no hay predicciones cargadas en Supabase."); return; }
+        if (lista.length === 0) { setError(tr("Todavia no hay predicciones cargadas en Supabase.", "No predictions loaded in Supabase yet.")); return; }
         setFechas(lista);
         setFecha(lista[0]);
         const [d, es, uf] = await Promise.all([
@@ -62,7 +65,7 @@ export default function Dashboard({ embebido = false }: { embebido?: boolean }) 
             .gte("ts_utc", desde).limit(1500);
           setFocosRec((fr ?? []) as FocoRec[]);
         }
-      } catch (e: any) { setError(e?.message ?? "Error al leer Supabase"); }
+      } catch (e: any) { setError(e?.message ?? tr("Error al leer Supabase", "Error reading Supabase")); }
     })();
   }, []);
 
@@ -80,7 +83,7 @@ export default function Dashboard({ embebido = false }: { embebido?: boolean }) 
         setRiesgo(r);
         setAlertas((a.data ?? []) as Alerta[]);
         setRdeptos((rd.data ?? []) as RDepto[]);
-      } catch (e: any) { setError(e?.message ?? "Error al leer Supabase"); }
+      } catch (e: any) { setError(e?.message ?? tr("Error al leer Supabase", "Error reading Supabase")); }
     })();
   }, [fecha]);
 
@@ -122,7 +125,7 @@ export default function Dashboard({ embebido = false }: { embebido?: boolean }) 
           const b = infoBanda(r.banda);
           L.polygon(cellToBoundary(r.h3_cell) as [number, number][], {
             color: b.color, weight: r.banda === "verde" ? 0.3 : 1, fillColor: b.color, fillOpacity: b.opacidad,
-          }).bindPopup(`<b>${b.label}</b><br/>Indice de riesgo: ${r.indice ?? "s/d"}<br/>Probabilidad del modelo: ${(r.probabilidad * 100).toFixed(1)}%`).addTo(g);
+          }).bindPopup(`<b>${bl(r.banda)}</b><br/>${tr("Indice de riesgo", "Risk index")}: ${r.indice ?? tr("s/d", "n/a")}<br/>${tr("Probabilidad del modelo", "Model probability")}: ${(r.probabilidad * 100).toFixed(1)}%`).addTo(g);
         }
         g.addTo(map); capasRef.current.push(g);
       } else {
@@ -131,7 +134,7 @@ export default function Dashboard({ embebido = false }: { embebido?: boolean }) 
           const r = porDepto[d.nombre];
           const b = infoBanda(r?.banda);
           L.geoJSON(d.geojson, { style: { color: "#cbd5e1", weight: 1.2, fillColor: b.color, fillOpacity: 0.55 } })
-            .bindPopup(`<b>${d.nombre}</b><br/>Probabilidad de al menos un foco en 7 dias: ${r ? (r.probabilidad * 100).toFixed(0) + "%" : "s/d"}<br/>Nivel: ${b.label}`)
+            .bindPopup(`<b>${d.nombre}</b><br/>${tr("Probabilidad de al menos un foco en 7 dias", "Probability of at least one hotspot in 7 days")}: ${r ? (r.probabilidad * 100).toFixed(0) + "%" : tr("s/d", "n/a")}<br/>${tr("Nivel", "Level")}: ${bl(r?.banda)}`)
             .addTo(g);
         }
         g.addTo(map); capasRef.current.push(g);
@@ -142,7 +145,7 @@ export default function Dashboard({ embebido = false }: { embebido?: boolean }) 
         c.addTo(map); capasRef.current.push(c);
       }
     })();
-  }, [listo, riesgo, deptos, rdeptos, capa]);
+  }, [listo, riesgo, deptos, rdeptos, capa, lang]);
 
   // 4) Focos satelitales recientes
   useEffect(() => {
@@ -154,45 +157,45 @@ export default function Dashboard({ embebido = false }: { embebido?: boolean }) 
       const g = L.layerGroup();
       for (const f of focosRec) {
         L.circleMarker([f.lat, f.lon], { radius: 5, color: "#FF702E", weight: 2, fillColor: "#ffffff", fillOpacity: 0.95 })
-          .bindPopup(`<b>Foco satelital</b><br/>${f.ts_utc.slice(0, 16).replace("T", " ")} UTC<br/>${f.instrumento} (${f.satelite})<br/>Confianza: ${f.confianza_cat}<br/>FRP: ${f.frp_mw ?? "s/d"} MW`)
+          .bindPopup(`<b>${tr("Foco satelital", "Satellite hotspot")}</b><br/>${f.ts_utc.slice(0, 16).replace("T", " ")} UTC<br/>${f.instrumento} (${f.satelite})<br/>${tr("Confianza", "Confidence")}: ${f.confianza_cat}<br/>FRP: ${f.frp_mw ?? tr("s/d", "n/a")} MW`)
           .addTo(g);
       }
       g.addTo(mapRef.current);
       focosRef.current = g;
     })();
-  }, [listo, focosRec, verFocos]);
+  }, [listo, focosRec, verFocos, lang]);
 
   const esActual = !!(fecha && ultimaFoco && (new Date(ultimaFoco).getTime() - new Date(fecha).getTime()) / 86400000 <= 10);
   const conteo = (id: string) => riesgo.filter((r) => r.banda === id).length;
   const ir = (h3: string) => { const [la, lo] = cellToLatLng(h3); mapRef.current?.setView([la, lo], 10); };
-  const pct = (x: number | null) => (x == null ? "s/d" : (x * 100).toFixed(1) + "%");
+  const pct = (x: number | null) => (x == null ? tr("s/d", "n/a") : (x * 100).toFixed(1) + "%");
 
   return (
     <div className={embebido ? "app embebido" : "app"}>
       <div className="mapawrap">
         <div ref={mapaRef} className="mapa" />
         <div className="capas">
-          <button className={capa === "celdas" ? "on" : ""} onClick={() => setCapa("celdas")}>Celdas</button>
-          <button className={capa === "deptos" ? "on" : ""} onClick={() => setCapa("deptos")}>Departamentos</button>
+          <button className={capa === "celdas" ? "on" : ""} onClick={() => setCapa("celdas")}>{tr("Celdas", "Cells")}</button>
+          <button className={capa === "deptos" ? "on" : ""} onClick={() => setCapa("deptos")}>{tr("Departamentos", "Departments")}</button>
         </div>
-        <button className={"panel-toggle" + (panelAbierto ? "" : " visible")} onClick={() => setPanelAbierto(true)}>Mostrar panel</button>
+        <button className={"panel-toggle" + (panelAbierto ? "" : " visible")} onClick={() => setPanelAbierto(true)}>{tr("Mostrar panel", "Show panel")}</button>
       </div>
       <aside className={"panel" + (panelAbierto ? "" : " cerrado")}>
-        <button className="panel-cerrar" onClick={() => setPanelAbierto(false)}>Ocultar</button>
+        <button className="panel-cerrar" onClick={() => setPanelAbierto(false)}>{tr("Ocultar", "Hide")}</button>
         <div className="fechabar">
           <select value={fecha ?? ""} onChange={(e) => setFecha(e.target.value)}>
             {fechas.map((f) => <option key={f} value={f}>{f}</option>)}
           </select>
-          <span className={esActual ? "etq actual" : "etq hist"}>{esActual ? "Situacion actual" : "Repeticion historica"}</span>
+          <span className={esActual ? "etq actual" : "etq hist"}>{esActual ? tr("Situacion actual", "Current situation") : tr("Repeticion historica", "Historical replay")}</span>
         </div>
         <p className="sub">
-          Riesgo de focos en los 7 dias siguientes a {fecha ?? "..."}.
-          {esActual ? " Calculado con datos satelitales hasta " + ultimaFoco + "." : " Es una repeticion de una fecha pasada, no el pronostico de hoy."}
+          {tr("Riesgo de focos en los 7 dias siguientes a", "Hotspot risk for the 7 days after")} {fecha ?? "..."}.
+          {esActual ? " " + tr("Calculado con datos satelitales hasta", "Computed with satellite data up to") + " " + ultimaFoco + "." : " " + tr("Es una repeticion de una fecha pasada, no el pronostico de hoy.", "This is a replay of a past date, not today's forecast.")}
         </p>
         {focosRec.length > 0 && (
           <label className="chk">
             <input type="checkbox" checked={verFocos} onChange={(e) => setVerFocos(e.target.checked)} />
-            {" "}Mostrar focos satelitales de los ultimos 3 dias ({focosRec.length}, hasta {ultimaFoco})
+            {" "}{tr("Mostrar focos satelitales de los ultimos 3 dias", "Show satellite hotspots from the last 3 days")} ({focosRec.length}, {tr("hasta", "up to")} {ultimaFoco})
           </label>
         )}
         {error && <div className="msg">{error}</div>}
@@ -207,21 +210,21 @@ export default function Dashboard({ embebido = false }: { embebido?: boolean }) 
         </div>
         <p className="nota">
           {capa === "celdas"
-            ? "Indice 0-100: ordena el riesgo relativo de cada celda de ~36 km2. No es una probabilidad."
-            : "Probabilidad calibrada de que haya al menos un foco en el departamento en 7 dias."}
+            ? tr("Indice 0-100: ordena el riesgo relativo de cada celda de ~36 km2. No es una probabilidad.", "Index 0-100: ranks the relative risk of each ~36 km2 cell. It is not a probability.")
+            : tr("Probabilidad calibrada de que haya al menos un foco en el departamento en 7 dias.", "Calibrated probability of at least one hotspot in the department within 7 days.")}
         </p>
 
         <div className="tabs">
-          <button className={tab === "alertas" ? "on" : ""} onClick={() => setTab("alertas")}>Alertas ({alertas.length})</button>
-          <button className={tab === "deptos" ? "on" : ""} onClick={() => setTab("deptos")}>Departamentos</button>
+          <button className={tab === "alertas" ? "on" : ""} onClick={() => setTab("alertas")}>{tr("Alertas", "Alerts")} ({alertas.length})</button>
+          <button className={tab === "deptos" ? "on" : ""} onClick={() => setTab("deptos")}>{tr("Departamentos", "Departments")}</button>
         </div>
 
         {tab === "alertas" && alertas.map((a) => {
           const b = infoBanda(a.banda);
           return (
             <div key={a.h3_cell} className="alerta" style={{ borderLeftColor: b.color }} onClick={() => ir(a.h3_cell)}>
-              <div className="top"><span>{b.label.toUpperCase()}</span><span>indice {a.indice ?? "s/d"}</span></div>
-              <div className="motivo">{(a.motivo ?? "").split("; ").slice(0, 2).join(". ")}</div>
+              <div className="top"><span>{bl(a.banda).toUpperCase()}</span><span>{tr("indice", "index")} {a.indice ?? tr("s/d", "n/a")}</span></div>
+              <div className="motivo">{motivoTr(a.motivo, lang).split("; ").slice(0, 2).join(". ")}</div>
             </div>
           );
         })}
@@ -231,32 +234,32 @@ export default function Dashboard({ embebido = false }: { embebido?: boolean }) 
           return (
             <div key={r.departamento} className="alerta" style={{ borderLeftColor: b.color }}>
               <div className="top"><span>{r.departamento}</span><span>{(r.probabilidad * 100).toFixed(0)}%</span></div>
-              <div className="motivo">{b.label}, {r.n_celdas} celdas</div>
+              <div className="motivo">{bl(r.banda)}, {r.n_celdas} {tr("celdas", "cells")}</div>
             </div>
           );
         })}
 
         {escala.length > 0 && (
           <details>
-            <summary>Que paso realmente en cada banda</summary>
+            <summary>{tr("Que paso realmente en cada banda", "What actually happened in each band")}</summary>
             <table className="tabla">
-              <thead><tr><th>Banda</th><th>Celdas-dia</th><th>Con fuego en 7 d</th><th>x base</th></tr></thead>
+              <thead><tr><th>{tr("Banda", "Band")}</th><th>{tr("Celdas-dia", "Cell-days")}</th><th>{tr("Con fuego en 7 d", "With fire in 7 d")}</th><th>{tr("x base", "x base")}</th></tr></thead>
               <tbody>
                 {escala.map((e) => (
                   <tr key={e.banda}>
-                    <td><i className="dot" style={{ background: infoBanda(e.banda).color }} />{infoBanda(e.banda).label}</td>
-                    <td>{pct(e.frac_celdas_dia)}</td><td>{pct(e.frecuencia_observada)}</td><td>{e.lift ?? "s/d"}</td>
+                    <td><i className="dot" style={{ background: infoBanda(e.banda).color }} />{bl(e.banda)}</td>
+                    <td>{pct(e.frac_celdas_dia)}</td><td>{pct(e.frecuencia_observada)}</td><td>{e.lift ?? tr("s/d", "n/a")}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
-            <p className="nota">Medido en datos que el modelo nunca vio (2024 en adelante).</p>
+            <p className="nota">{tr("Medido en datos que el modelo nunca vio (2024 en adelante).", "Measured on data the model never saw (2024 onward).")}</p>
           </details>
         )}
 
         <p className="aviso">
-          ARGOS prioriza donde mirar, no predice incendios con certeza. La mayoria de las celdas alertadas no tendra fuego.
-          Datos: NASA FIRMS (MODIS y VIIRS).
+          {tr("ARGOS prioriza donde mirar, no predice incendios con certeza. La mayoria de las celdas alertadas no tendra fuego.", "ARGOS prioritizes where to look; it does not predict fires with certainty. Most alerted cells will not have fire.")}{" "}
+          {tr("Datos", "Data")}: NASA FIRMS (MODIS {tr("y", "and")} VIIRS).
         </p>
       </aside>
     </div>

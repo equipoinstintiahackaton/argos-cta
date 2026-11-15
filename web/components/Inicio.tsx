@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { infoBanda, BANDAS } from "../lib/bandas";
+import { infoBanda, BANDAS, nombreBanda } from "../lib/bandas";
+import { useIdioma } from "../lib/i18n";
 import { getSupabase } from "../lib/supabase";
 import { contar, ultimoFoco } from "../lib/resumen";
 import { fechaCorta, num } from "../lib/formato";
@@ -26,6 +27,7 @@ function curva(vals: number[], max: number) {
 }
 
 export default function Inicio() {
+  const { tr, lang } = useIdioma();
   const [filas, setFilas] = useState<R[]>([]);
   const [esc, setEsc] = useState<Esc[]>([]);
   const [recientes, setRecientes] = useState<number | null>(null);
@@ -34,7 +36,7 @@ export default function Inicio() {
 
   useEffect(() => {
     const sb = getSupabase();
-    if (!sb) { setError("Falta la configuracion de Supabase."); return; }
+    if (!sb) { setError(tr("Falta la configuracion de Supabase.", "Supabase is not configured.")); return; }
     (async () => {
       const { data, error: e } = await sb.from("riesgo_depto").select("fecha,departamento,probabilidad,banda,n_celdas")
         .order("fecha", { ascending: false }).limit(16 * 14);
@@ -60,11 +62,12 @@ export default function Inicio() {
   }, [filas]);
 
   if (error) return <div className="msg">{error}</div>;
-  if (!hoy.length) return <p className="nota" style={{ padding: 20 }}>Cargando el estado de hoy...</p>;
+  if (!hoy.length) return <p className="nota" style={{ padding: 20 }}>{tr("Cargando el estado de hoy...", "Loading today's status...")}</p>;
 
   const top = hoy[0];
   const b = infoBanda(top.banda);
-  const pctTxt = (p: number) => (p > 0.9 ? "mas de 90" : num(p * 100));
+  const bl = (id: string) => nombreBanda(id, lang);
+  const pctTxt = (p: number) => (p > 0.9 ? tr("mas de 90", "over 90") : num(p * 100));
   const desactualizada = !!(fechaHoy && ultimo && (new Date(ultimo).getTime() - new Date(fechaHoy + "T00:00:00Z").getTime()) / 86400000 > 2);
   const max = Math.max(0.05, ...serie) * 1.1;
   const c = curva(serie, max);
@@ -74,29 +77,29 @@ export default function Inicio() {
   return (
     <div className="gl-inicio">
       <section className="gl-hero">
-        <span className="gl-chip">Centro de monitoreo</span>
+        <span className="gl-chip">{tr("Centro de monitoreo", "Monitoring center")}</span>
         <h1>
-          <span className="gl-ln"><span>Riesgo {b.label.toLowerCase()}</span></span>
-          <span className="gl-ln"><span>en {top.departamento}</span></span>
+          <span className="gl-ln"><span>{lang === "en" ? `${bl(top.banda)} risk` : `Riesgo ${b.label.toLowerCase()}`}</span></span>
+          <span className="gl-ln"><span>{tr("en", "in")} {top.departamento}</span></span>
         </h1>
         <p className="gl-blurb">
-          Es el departamento con mayor probabilidad estimada de al menos un foco en los proximos 7 dias ({pctTxt(top.probabilidad)}%).
-          ARGOS es un prototipo de apoyo informativo: priorizar donde mirar no reemplaza los canales oficiales de emergencia.
+          {tr("Es el departamento con mayor probabilidad estimada de al menos un foco en los proximos 7 dias", "It is the department with the highest estimated probability of at least one hotspot in the next 7 days")} ({pctTxt(top.probabilidad)}%).{" "}
+          {tr("ARGOS es un prototipo de apoyo informativo: priorizar donde mirar no reemplaza los canales oficiales de emergencia.", "ARGOS is an informational support prototype: prioritizing where to look does not replace official emergency channels.")}
         </p>
         <div className="gl-botones">
-          <Link href="/mapa" className="gl-btn">Ver el mapa</Link>
-          <Link href="/registro" className="gl-link">Registro de incendios</Link>
+          <Link href="/mapa" className="gl-btn">{tr("Ver el mapa", "View the map")}</Link>
+          <Link href="/registro" className="gl-link">{tr("Registro de incendios", "Fire registry")}</Link>
         </div>
       </section>
 
-      <section className="gl-forecast" aria-label="Escala de alerta y evolucion de la probabilidad">
+      <section className="gl-forecast" aria-label={tr("Escala de alerta y evolucion de la probabilidad", "Alert scale and probability trend")}>
         <div className="gl-temps">
           {BANDAS.map((x, i) => {
             const e = esc.find((y) => y.banda === x.id);
             return (
               <div key={x.id} style={{ ["--d" as any]: `${1.26 + i * 0.07}s` }}>
-                <b style={{ color: x.id === "negro" ? "#fff" : x.color }}>{x.label}</b>
-                <small>{e?.frecuencia_observada != null ? `${num(e.frecuencia_observada * 100, 1)}% observado` : `${x.desde} a ${x.hasta}`}</small>
+                <b style={{ color: x.id === "negro" ? "#fff" : x.color }}>{bl(x.id)}</b>
+                <small>{e?.frecuencia_observada != null ? `${num(e.frecuencia_observada * 100, 1)}% ${tr("observado", "observed")}` : `${x.desde} ${tr("a", "to")} ${x.hasta}`}</small>
               </div>
             );
           })}
@@ -111,7 +114,7 @@ export default function Inicio() {
         {serie.length >= 5 && <div className="gl-days">
           {etiquetas.map((d, i) => <span key={d} className={i === etiquetas.length - 1 ? "on" : ""}>{f(d)}</span>)}
         </div>}
-        <p className="gl-cap">Escala de 7 niveles con la frecuencia de focos que se observo en cada uno, medida en datos que el modelo no vio. La probabilidad por departamento es una estimacion: sobre 90% se muestra como tope.</p>
+        <p className="gl-cap">{tr("Escala de 7 niveles con la frecuencia de focos que se observo en cada uno, medida en datos que el modelo no vio. La probabilidad por departamento es una estimacion: sobre 90% se muestra como tope.", "7-level scale with the hotspot frequency observed at each level, measured on data the model did not see. Department probability is an estimate: above 90% is shown as a cap.")}</p>
       </section>
 
       <aside className="gl-rail">
@@ -119,22 +122,22 @@ export default function Inicio() {
           <span className="gl-place">{top.departamento}</span>
           <div className="gl-bigtemp" style={top.probabilidad > 0.9 ? { fontSize: 44, letterSpacing: -1 } : undefined}>{top.probabilidad > 0.9 ? ">90" : num(top.probabilidad * 100)}<i>%</i></div>
           <div className="gl-metrics">
-            <div><b>{b.label}</b><small>nivel</small></div>
-            <div><b>{num(top.n_celdas)}</b><small>celdas</small></div>
-            <div><b>{recientes == null ? "s/d" : num(recientes)}</b><small>focos 3 dias (provincia)</small></div>
+            <div><b>{bl(top.banda)}</b><small>{tr("nivel", "level")}</small></div>
+            <div><b>{num(top.n_celdas)}</b><small>{tr("celdas", "cells")}</small></div>
+            <div><b>{recientes == null ? tr("s/d", "n/a") : num(recientes)}</b><small>{tr("focos 3 dias (provincia)", "hotspots 3 days (province)")}</small></div>
           </div>
         </div>
         {hoy.slice(1, 4).map((d) => {
           const bb = infoBanda(d.banda);
           return (
             <div key={d.departamento} className="gl-card row">
-              <div><small>Catamarca</small><b>{d.departamento}</b><span style={{ color: bb.id === "negro" ? "#fff" : bb.color }}>{bb.label}</span></div>
+              <div><small>Catamarca</small><b>{d.departamento}</b><span style={{ color: bb.id === "negro" ? "#fff" : bb.color }}>{bl(bb.id)}</span></div>
               <div className="gl-t">{d.probabilidad > 0.9 ? ">90" : num(d.probabilidad * 100)}<i>%</i></div>
             </div>
           );
         })}
-        {desactualizada && <p className="gl-warn">Prediccion desactualizada: el riesgo no se recalculo con los datos satelitales mas recientes.</p>}
-        <p className="gl-cap">Prediccion al {fechaHoy ? fechaCorta(fechaHoy + "T12:00:00Z") : "s/d"}{ultimo ? `. Ultimo foco recibido: ${fechaCorta(ultimo)}` : ""}.</p>
+        {desactualizada && <p className="gl-warn">{tr("Prediccion desactualizada: el riesgo no se recalculo con los datos satelitales mas recientes.", "Outdated prediction: risk was not recalculated with the latest satellite data.")}</p>}
+        <p className="gl-cap">{tr("Prediccion al", "Prediction as of")} {fechaHoy ? fechaCorta(fechaHoy + "T12:00:00Z") : tr("s/d", "n/a")}{ultimo ? `. ${tr("Ultimo foco recibido", "Latest hotspot received")}: ${fechaCorta(ultimo)}` : ""}.</p>
       </aside>
     </div>
   );

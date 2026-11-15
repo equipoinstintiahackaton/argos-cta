@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import "leaflet/dist/leaflet.css";
 import "./globals.css";
+import { IdiomaProvider } from "../lib/i18n";
 
 export const metadata = {
   title: "ARGOS | Alerta de Riesgo Geoespacial y Observacion Satelital",
@@ -10,7 +11,7 @@ export const metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="es">
-      <body>{children}</body>
+      <body><IdiomaProvider>{children}</IdiomaProvider></body>
     </html>
   );
 }

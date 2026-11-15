@@ -15,3 +15,9 @@ const POR_ID = Object.fromEntries(BANDAS.map((b) => [b.id, b]));
 export function infoBanda(id: string | null | undefined) {
   return (id && POR_ID[id]) || { id: "sin_dato", label: "Sin dato", color: "#6b7280", opacidad: 0.05, desde: 0, hasta: 0 };
 }
+
+const EN: Record<string, string> = { verde: "Green", amarillo: "Yellow", naranja: "Orange", naranja_fuerte: "Strong orange", rojo: "Red", marron: "Brown", negro: "Black", sin_dato: "No data" };
+/** Nombre de la banda en el idioma pedido. */
+export function nombreBanda(id: string | null | undefined, lang: "es" | "en") {
+  return lang === "en" ? EN[id ?? "sin_dato"] ?? "No data" : infoBanda(id).label;
+}
