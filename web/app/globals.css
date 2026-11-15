@@ -328,7 +328,7 @@ a.tel { text-decoration: none; }
 .lp-filo { max-width: 1152px; margin: 0 auto; padding: 100px 24px; }
 .lp-h-medio { font-size: clamp(36px, 6vw, 80px); font-weight: 700; margin-bottom: 60px; }
 .lp-filo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
-.lp-img-redondeada { border-radius: 14px; overflow: hidden; aspect-ratio: 4 / 3; }
+.lp-img-redondeada { border-radius: 14px; overflow: hidden; aspect-ratio: 720 / 345; }
 .lp-img-redondeada img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .lp-filo-textos { display: flex; flex-direction: column; gap: 32px; }
 .lp-filo-textos p:not(.lp-label) { color: var(--argos-text-secondary); font-size: 16px; line-height: 1.7; }
@@ -339,7 +339,7 @@ a.tel { text-decoration: none; }
 .lp-serv-cab span { color: var(--argos-primary); font-size: 14px; font-weight: 700; }
 .lp-serv-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
 .lp-card { border-radius: 14px; display: block; background: var(--argos-card); border: 1px solid var(--argos-border); border-bottom: 3px solid var(--argos-secondary); }
-.lp-card-img { aspect-ratio: 16 / 10; overflow: hidden; background: var(--argos-surface); }
+.lp-card-img { aspect-ratio: 16 / 9; overflow: hidden; background: var(--argos-surface); }
 .lp-card-img img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .7s; }
 .lp-card-img.claro { background: #fff; } .lp-card-img.claro img { object-fit: contain; }
 .lp-card:hover .lp-card-img img { transform: scale(1.05); }
@@ -420,3 +420,4 @@ img, svg { max-width: 100%; }
   .hb-fila { grid-template-columns: 96px 1fr 44px; gap: 8px; }
   .menu { gap: 8px; }
 }
+@media (max-width: 860px) { .gl-nav { gap: 10px; } .gl-side { padding: 0 6px; } }

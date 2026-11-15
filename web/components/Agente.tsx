@@ -3,11 +3,15 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { getSupabase } from "../lib/supabase";
 import { useIdioma } from "../lib/i18n";
+import Barras from "./Barras";
+import "./agente.css";
 
-type Msg = { role: "user" | "assistant"; content: string; error?: boolean };
+type Visual = { tipo: "barras"; titulo: string; datos: { etiqueta: string; valor: number }[] } | { tipo: "tabla"; titulo: string; columnas: string[]; filas: (string | number)[][] };
+
+type Msg = { role: "user" | "assistant"; content: string; error?: boolean; visuales?: Visual[] };
 
 export default function Agente() {
-  const { tr } = useIdioma();
+  const { tr, lang } = useIdioma();
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [texto, setTexto] = useState("");
   const [cargando, setCargando] = useState(false);
@@ -33,10 +37,10 @@ export default function Agente() {
       const r = await fetch("/api/agente", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${data.session?.access_token ?? ""}` },
-        body: JSON.stringify({ mensajes: nuevos.filter((m) => !m.error).map(({ role, content }) => ({ role, content })) }),
+        body: JSON.stringify({ idioma: lang, mensajes: nuevos.filter((m) => !m.error).map(({ role, content }) => ({ role, content })) }),
       });
       const j = await r.json();
-      setMsgs([...nuevos, r.ok ? { role: "assistant", content: j.respuesta } : { role: "assistant", content: j.error ?? "Error", error: true }]);
+      setMsgs([...nuevos, r.ok ? { role: "assistant", content: j.respuesta, visuales: j.visuales } : { role: "assistant", content: j.error ?? "Error", error: true }]);
     } catch {
       setMsgs([...nuevos, { role: "assistant", content: tr("No se pudo conectar con el agente.", "Could not reach the agent."), error: true }]);
     } finally { setCargando(false); }
@@ -53,8 +57,23 @@ export default function Agente() {
             <div className="ag-ejemplos">{ejemplos.map((e) => <button key={e} onClick={() => enviar(e)}>{e}</button>)}</div>
           </div>
         )}
-        {msgs.map((m, i) => <div key={i} className={"ag-msg " + m.role + (m.error ? " err" : "")}>{m.content}</div>)}
-        {cargando && <div className="ag-msg assistant ag-pensando">{tr("Consultando los datos...", "Querying the data...")}</div>}
+        {msgs.map((m, i) => (
+          <div key={i} className={"ag-fila " + m.role}>
+            <div className={"ag-msg " + m.role + (m.error ? " err" : "")}>{m.content}</div>
+            {m.visuales?.map((v, k) => (
+              <div key={k} className="ag-visual">
+                <h4>{v.titulo}</h4>
+                {v.tipo === "barras" ? <Barras datos={v.datos} /> : (
+                  <div className="ag-tabla"><table className="tabla">
+                    <thead><tr>{v.columnas.map((c) => <th key={c}>{c}</th>)}</tr></thead>
+                    <tbody>{v.filas.map((f, r) => <tr key={r}>{f.map((x, c) => <td key={c}>{x}</td>)}</tr>)}</tbody>
+                  </table></div>
+                )}
+              </div>
+            ))}
+          </div>
+        ))}
+        {cargando && <div className="ag-pensando">{tr("Consultando los datos...", "Querying the data...")}</div>}
         <div ref={fin} />
       </div>
       <form className="ag-form" onSubmit={alEnviar}>

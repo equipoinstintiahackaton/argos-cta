@@ -1,0 +1,23 @@
+/* Agente tecnico (archivo propio para que no dependa del orden de globals.css) */
+.agente { display: flex; flex-direction: column; height: calc(100dvh - 300px); min-height: 380px; }
+.agente .ag-lista { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; padding: 4px 2px 12px; }
+.agente .ag-vacio { color: #AEB6BD; font-size: 14px; line-height: 1.6; }
+.agente .ag-ejemplos { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.agente .ag-ejemplos button { background: rgba(255,255,255,.08); border: 1px solid #343C43; color: #fff; border-radius: 999px; padding: 8px 14px; font-size: 13px; cursor: pointer; font-family: Arial, sans-serif; }
+.agente .ag-ejemplos button:hover { background: #E95724; border-color: #E95724; }
+.agente .ag-fila { display: flex; flex-direction: column; gap: 8px; }
+.agente .ag-fila.user { align-items: flex-end; } .agente .ag-fila.assistant { align-items: flex-start; }
+.agente .ag-msg { max-width: 82%; padding: 11px 15px; border-radius: 16px; font-size: 14px; line-height: 1.55; white-space: pre-wrap; word-break: break-word; color: #fff; }
+.agente .ag-msg.user { background: #E95724; border-bottom-right-radius: 4px; }
+.agente .ag-msg.assistant { background: #20262B; border: 1px solid #343C43; border-bottom-left-radius: 4px; }
+.agente .ag-msg.err { border-color: #ef4444; color: #fca5a5; }
+.agente .ag-pensando { color: #AEB6BD; font-style: italic; align-self: flex-start; background: #20262B; border: 1px solid #343C43; padding: 11px 15px; border-radius: 16px; font-size: 14px; }
+.agente .ag-visual { width: 100%; max-width: 760px; background: rgba(25,30,35,.85); border: 1px solid #343C43; border-radius: 14px; padding: 14px 16px; }
+.agente .ag-visual h4 { margin: 0 0 8px; font-size: 13px; color: #FF813C; }
+.agente .ag-tabla { overflow-x: auto; }
+.agente .ag-form { display: flex; gap: 8px; margin-top: 6px; }
+.agente .ag-form input { flex: 1; padding: 13px 16px; border-radius: 999px; border: 1px solid #343C43; background: rgba(25,30,35,.9); color: #fff; font-family: Arial, sans-serif; font-size: 14px; }
+.agente .ag-form button { background: #E95724; color: #fff; border: 0; border-radius: 999px; padding: 0 24px; font-weight: 700; cursor: pointer; font-family: Arial, sans-serif; }
+.agente .ag-form button:hover:not(:disabled) { background: #FF813C; }
+.agente .ag-form button:disabled { opacity: .5; cursor: default; }
+@media (max-width: 860px) { .agente .ag-msg { max-width: 94%; } .agente { height: calc(100dvh - 270px); } }
