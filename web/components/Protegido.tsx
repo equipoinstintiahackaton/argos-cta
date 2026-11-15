@@ -24,6 +24,6 @@ export default function Protegido({ children }: { children: ReactNode }) {
     return () => sub.subscription.unsubscribe();
   }, [router]);
 
-  if (!ok) return <div className="pagina"><p className="nota">{tr("Verificando sesion...", "Checking session...")}</p></div>;
+  if (!ok) return <div className="pagina"><p className="nota">{tr("Verificando sesión...", "Checking session...")}</p></div>;
   return <>{children}</>;
 }

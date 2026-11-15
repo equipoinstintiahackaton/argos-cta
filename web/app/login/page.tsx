@@ -20,7 +20,7 @@ export default function Login() {
     e.preventDefault();
     setError(null);
     const sb = getSupabase();
-    if (!sb) { setError(tr("Falta la configuracion de Supabase en el sitio.", "Supabase is not configured on this site.")); return; }
+    if (!sb) { setError(tr("Falta la configuración de Supabase en el sitio.", "Supabase is not configured on this site.")); return; }
     setCargando(true);
     const { error: err } = await sb.auth.signInWithPassword({ email, password: clave });
     setCargando(false);
@@ -39,7 +39,7 @@ export default function Login() {
           <h2>{tr("Ingresar a", "Sign in to")} <span className="acento">ARGOS</span></h2>
           <p className="nota">{tr("Acceso para bomberos, brigadistas y organismos de emergencia. Las cuentas las crea el administrador.", "Access for firefighters, forest brigades and emergency agencies. Accounts are created by the administrator.")}</p>
           <form onSubmit={entrar}>
-            <label>{tr("Correo electronico", "Email")}
+            <label>{tr("Correo electrónico", "Email")}
               <input type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
             </label>
             <label>{tr("Contraseña", "Password")}

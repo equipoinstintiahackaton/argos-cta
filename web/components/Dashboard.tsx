@@ -46,7 +46,7 @@ export default function Dashboard({ embebido = false }: { embebido?: boolean }) 
         const { data: f, error: e1 } = await sb.from("riesgo_depto").select("fecha").order("fecha", { ascending: false }).limit(400);
         if (e1) throw e1;
         const lista = Array.from(new Set((f ?? []).map((x: any) => x.fecha as string)));
-        if (lista.length === 0) { setError(tr("Todavia no hay predicciones cargadas en Supabase.", "No predictions loaded in Supabase yet.")); return; }
+        if (lista.length === 0) { setError(tr("Todavía no hay predicciones cargadas en Supabase.", "No predictions loaded in Supabase yet.")); return; }
         setFechas(lista);
         setFecha(lista[0]);
         const [d, es, uf] = await Promise.all([
@@ -125,7 +125,7 @@ export default function Dashboard({ embebido = false }: { embebido?: boolean }) 
           const b = infoBanda(r.banda);
           L.polygon(cellToBoundary(r.h3_cell) as [number, number][], {
             color: b.color, weight: r.banda === "verde" ? 0.3 : 1, fillColor: b.color, fillOpacity: b.opacidad,
-          }).bindPopup(`<b>${bl(r.banda)}</b><br/>${tr("Indice de riesgo", "Risk index")}: ${r.indice ?? tr("s/d", "n/a")}<br/>${tr("Probabilidad del modelo", "Model probability")}: ${(r.probabilidad * 100).toFixed(1)}%`).addTo(g);
+          }).bindPopup(`<b>${bl(r.banda)}</b><br/>${tr("Índice de riesgo", "Risk index")}: ${r.indice ?? tr("s/d", "n/a")}<br/>${tr("Probabilidad del modelo", "Model probability")}: ${(r.probabilidad * 100).toFixed(1)}%`).addTo(g);
         }
         g.addTo(map); capasRef.current.push(g);
       } else {
@@ -134,7 +134,7 @@ export default function Dashboard({ embebido = false }: { embebido?: boolean }) 
           const r = porDepto[d.nombre];
           const b = infoBanda(r?.banda);
           L.geoJSON(d.geojson, { style: { color: "#cbd5e1", weight: 1.2, fillColor: b.color, fillOpacity: 0.55 } })
-            .bindPopup(`<b>${d.nombre}</b><br/>${tr("Probabilidad de al menos un foco en 7 dias", "Probability of at least one hotspot in 7 days")}: ${r ? (r.probabilidad * 100).toFixed(0) + "%" : tr("s/d", "n/a")}<br/>${tr("Nivel", "Level")}: ${bl(r?.banda)}`)
+            .bindPopup(`<b>${d.nombre}</b><br/>${tr("Probabilidad de al menos un foco en 7 días", "Probability of at least one hotspot in 7 days")}: ${r ? (r.probabilidad * 100).toFixed(0) + "%" : tr("s/d", "n/a")}<br/>${tr("Nivel", "Level")}: ${bl(r?.banda)}`)
             .addTo(g);
         }
         g.addTo(map); capasRef.current.push(g);
@@ -186,16 +186,16 @@ export default function Dashboard({ embebido = false }: { embebido?: boolean }) 
           <select value={fecha ?? ""} onChange={(e) => setFecha(e.target.value)}>
             {fechas.map((f) => <option key={f} value={f}>{f}</option>)}
           </select>
-          <span className={esActual ? "etq actual" : "etq hist"}>{esActual ? tr("Situacion actual", "Current situation") : tr("Repeticion historica", "Historical replay")}</span>
+          <span className={esActual ? "etq actual" : "etq hist"}>{esActual ? tr("Situación actual", "Current situation") : tr("Repetición histórica", "Historical replay")}</span>
         </div>
         <p className="sub">
-          {tr("Riesgo de focos en los 7 dias siguientes a", "Hotspot risk for the 7 days after")} {fecha ?? "..."}.
-          {esActual ? " " + tr("Calculado con datos satelitales hasta", "Computed with satellite data up to") + " " + ultimaFoco + "." : " " + tr("Es una repeticion de una fecha pasada, no el pronostico de hoy.", "This is a replay of a past date, not today's forecast.")}
+          {tr("Riesgo de focos en los 7 días siguientes a", "Hotspot risk for the 7 days after")} {fecha ?? "..."}.
+          {esActual ? " " + tr("Calculado con datos satelitales hasta", "Computed with satellite data up to") + " " + ultimaFoco + "." : " " + tr("Es una repetición de una fecha pasada, no el pronóstico de hoy.", "This is a replay of a past date, not today's forecast.")}
         </p>
         {focosRec.length > 0 && (
           <label className="chk">
             <input type="checkbox" checked={verFocos} onChange={(e) => setVerFocos(e.target.checked)} />
-            {" "}{tr("Mostrar focos satelitales de los ultimos 3 dias", "Show satellite hotspots from the last 3 days")} ({focosRec.length}, {tr("hasta", "up to")} {ultimaFoco})
+            {" "}{tr("Mostrar focos satelitales de los últimos 3 días", "Show satellite hotspots from the last 3 days")} ({focosRec.length}, {tr("hasta", "up to")} {ultimaFoco})
           </label>
         )}
         {error && <div className="msg">{error}</div>}
@@ -210,8 +210,8 @@ export default function Dashboard({ embebido = false }: { embebido?: boolean }) 
         </div>
         <p className="nota">
           {capa === "celdas"
-            ? tr("Indice 0-100: ordena el riesgo relativo de cada celda de ~36 km2. No es una probabilidad.", "Index 0-100: ranks the relative risk of each ~36 km2 cell. It is not a probability.")
-            : tr("Probabilidad calibrada de que haya al menos un foco en el departamento en 7 dias.", "Calibrated probability of at least one hotspot in the department within 7 days.")}
+            ? tr("Índice 0-100: ordena el riesgo relativo de cada celda de ~36 km2. No es una probabilidad.", "Index 0-100: ranks the relative risk of each ~36 km2 cell. It is not a probability.")
+            : tr("Probabilidad calibrada de que haya al menos un foco en el departamento en 7 días.", "Calibrated probability of at least one hotspot in the department within 7 days.")}
         </p>
 
         <div className="tabs">
@@ -223,7 +223,7 @@ export default function Dashboard({ embebido = false }: { embebido?: boolean }) 
           const b = infoBanda(a.banda);
           return (
             <div key={a.h3_cell} className="alerta" style={{ borderLeftColor: b.color }} onClick={() => ir(a.h3_cell)}>
-              <div className="top"><span>{bl(a.banda).toUpperCase()}</span><span>{tr("indice", "index")} {a.indice ?? tr("s/d", "n/a")}</span></div>
+              <div className="top"><span>{bl(a.banda).toUpperCase()}</span><span>{tr("índice", "index")} {a.indice ?? tr("s/d", "n/a")}</span></div>
               <div className="motivo">{motivoTr(a.motivo, lang).split("; ").slice(0, 2).join(". ")}</div>
             </div>
           );
@@ -241,9 +241,9 @@ export default function Dashboard({ embebido = false }: { embebido?: boolean }) 
 
         {escala.length > 0 && (
           <details>
-            <summary>{tr("Que paso realmente en cada banda", "What actually happened in each band")}</summary>
+            <summary>{tr("Qué pasó realmente en cada banda", "What actually happened in each band")}</summary>
             <table className="tabla">
-              <thead><tr><th>{tr("Banda", "Band")}</th><th>{tr("Celdas-dia", "Cell-days")}</th><th>{tr("Con fuego en 7 d", "With fire in 7 d")}</th><th>{tr("x base", "x base")}</th></tr></thead>
+              <thead><tr><th>{tr("Banda", "Band")}</th><th>{tr("Celdas-día", "Cell-days")}</th><th>{tr("Con fuego en 7 d", "With fire in 7 d")}</th><th>{tr("x base", "x base")}</th></tr></thead>
               <tbody>
                 {escala.map((e) => (
                   <tr key={e.banda}>
@@ -258,7 +258,7 @@ export default function Dashboard({ embebido = false }: { embebido?: boolean }) 
         )}
 
         <p className="aviso">
-          {tr("ARGOS prioriza donde mirar, no predice incendios con certeza. La mayoria de las celdas alertadas no tendra fuego.", "ARGOS prioritizes where to look; it does not predict fires with certainty. Most alerted cells will not have fire.")}{" "}
+          {tr("ARGOS prioriza dónde mirar, no predice incendios con certeza. La mayoria de las celdas alertadas no tendra fuego.", "ARGOS prioritizes where to look; it does not predict fires with certainty. Most alerted cells will not have fire.")}{" "}
           {tr("Datos", "Data")}: NASA FIRMS (MODIS {tr("y", "and")} VIIRS).
         </p>
       </aside>

@@ -24,10 +24,10 @@ export default function UltimosIncendios() {
 
   return (
     <>
-      <p className="nota">{tr("Ultimos incendios que se extendieron mas de una celda o duraron varias detecciones. La duracion es la observada por satelite (un minimo).", "Latest fires that spread over more than one cell or lasted several detections. Duration is what the satellite observed (a minimum).")}</p>
+      <p className="nota">{tr("Últimos incendios que se extendieron más de una celda o duraron varias detecciones. La duración es la observada por satélite (un mínimo).", "Latest fires that spread over more than one cell or lasted several detections. Duration is what the satellite observed (a minimum).")}</p>
       <div style={{ overflowX: "auto" }}>
         <table className="tabla">
-          <thead><tr><th>{tr("Cuando empezo", "Started")}</th><th>{tr("Duracion", "Duration")}</th><th>{tr("Donde", "Where")}</th><th>{tr("Detecciones", "Detections")}</th><th>{tr("Tamaño", "Size")}</th></tr></thead>
+          <thead><tr><th>{tr("Cuándo empezó", "Started")}</th><th>{tr("Duración", "Duration")}</th><th>{tr("Dónde", "Where")}</th><th>{tr("Detecciones", "Detections")}</th><th>{tr("Tamaño", "Size")}</th></tr></thead>
           <tbody>{filas.map((d) => (
             <tr key={d.incendio_id}><td>{fecha(d.inicio)}</td><td>{duracion(d.duracion_h)}</td>
               <td>{d.departamento ?? tr("s/d", "n/a")} <a href={`https://www.openstreetmap.org/?mlat=${d.lat}&mlon=${d.lon}#map=13/${d.lat}/${d.lon}`} target="_blank" rel="noreferrer">{d.lat.toFixed(3)}, {d.lon.toFixed(3)}</a></td>

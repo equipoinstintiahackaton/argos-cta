@@ -12,7 +12,7 @@ const LINKS: { id: Activo; href: string; es: string; en: string }[] = [
   { id: "inicio", href: "/", es: "Inicio", en: "Home" },
   { id: "dashboard", href: "/dashboard", es: "Dashboard", en: "Dashboard" },
   { id: "registro", href: "/registro", es: "Registro de incendios", en: "Fire registry" },
-  { id: "estadisticas", href: "/estadisticas", es: "Estadisticas", en: "Statistics" },
+  { id: "estadisticas", href: "/estadisticas", es: "Estadísticas", en: "Statistics" },
 ];
 
 export default function Nav({ activo }: { activo?: Activo }) {

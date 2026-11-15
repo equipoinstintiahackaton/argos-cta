@@ -7,7 +7,7 @@ import { getSupabase } from "../lib/supabase";
 import { useIdioma } from "../lib/i18n";
 import Idioma from "./Idioma";
 
-export type Vista = "inicio" | "mapa" | "registro" | "ambiente" | "estadisticas" | "instituciones";
+export type Vista = "inicio" | "mapa" | "registro" | "ambiente" | "estadisticas" | "instituciones" | "agente";
 
 const ITEMS: { id: Vista; href: string; es: string; en: string; icono: ReactNode }[] = [
   { id: "inicio", href: "/dashboard", es: "Inicio del centro de monitoreo", en: "Monitoring center home",
@@ -18,8 +18,10 @@ const ITEMS: { id: Vista; href: string; es: string; en: string; icono: ReactNode
     icono: <><path d="M12 3c1 3 5 5 5 10a5 5 0 0 1-10 0c0-2 1-3 2-4 0 2 1 3 2 3 0-3-1-6 1-9z" /></> },
   { id: "ambiente", href: "/ambiente", es: "Condiciones ambientales", en: "Environmental conditions",
     icono: <><path d="M7 18a4 4 0 0 1 0-8 5 5 0 0 1 9.6-1A4.5 4.5 0 0 1 17 18z" /></> },
-  { id: "estadisticas", href: "/estadisticas", es: "Estadisticas y confiabilidad", en: "Statistics and reliability",
+  { id: "estadisticas", href: "/estadisticas", es: "Estadísticas y confiabilidad", en: "Statistics and reliability",
     icono: <><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" /></> },
+  { id: "agente", href: "/agente", es: "Agente técnico de IA", en: "AI technical agent",
+    icono: <><rect x="4" y="7" width="16" height="12" rx="3" /><path d="M12 7V3M9 13h.01M15 13h.01M9 16h6" /></> },
   { id: "instituciones", href: "/instituciones", es: "Organismos de emergencia", en: "Emergency agencies",
     icono: <><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z" /></> },
 ];
@@ -49,7 +51,7 @@ function Marco({ activo, hero, children }: { activo: Vista; hero?: boolean; chil
             </Link>
           ))}
         </nav>
-        <button className="gl-out" onClick={salir} aria-label={tr("Cerrar sesion", "Sign out")} title={tr("Cerrar sesion", "Sign out")}>
+        <button className="gl-out" onClick={salir} aria-label={tr("Cerrar sesión", "Sign out")} title={tr("Cerrar sesión", "Sign out")}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M9 4H5v16h4M16 8l4 4-4 4M20 12H9" /></svg>
         </button>
       </aside>

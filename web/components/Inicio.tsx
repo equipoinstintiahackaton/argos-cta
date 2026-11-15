@@ -36,7 +36,7 @@ export default function Inicio() {
 
   useEffect(() => {
     const sb = getSupabase();
-    if (!sb) { setError(tr("Falta la configuracion de Supabase.", "Supabase is not configured.")); return; }
+    if (!sb) { setError(tr("Falta la configuración de Supabase.", "Supabase is not configured.")); return; }
     (async () => {
       const { data, error: e } = await sb.from("riesgo_depto").select("fecha,departamento,probabilidad,banda,n_celdas")
         .order("fecha", { ascending: false }).limit(16 * 14);
@@ -67,7 +67,7 @@ export default function Inicio() {
   const top = hoy[0];
   const b = infoBanda(top.banda);
   const bl = (id: string) => nombreBanda(id, lang);
-  const pctTxt = (p: number) => (p > 0.9 ? tr("mas de 90", "over 90") : num(p * 100));
+  const pctTxt = (p: number) => (p > 0.9 ? tr("más de 90", "over 90") : num(p * 100));
   const desactualizada = !!(fechaHoy && ultimo && (new Date(ultimo).getTime() - new Date(fechaHoy + "T00:00:00Z").getTime()) / 86400000 > 2);
   const max = Math.max(0.05, ...serie) * 1.1;
   const c = curva(serie, max);
@@ -83,8 +83,8 @@ export default function Inicio() {
           <span className="gl-ln"><span>{tr("en", "in")} {top.departamento}</span></span>
         </h1>
         <p className="gl-blurb">
-          {tr("Es el departamento con mayor probabilidad estimada de al menos un foco en los proximos 7 dias", "It is the department with the highest estimated probability of at least one hotspot in the next 7 days")} ({pctTxt(top.probabilidad)}%).{" "}
-          {tr("ARGOS es un prototipo de apoyo informativo: priorizar donde mirar no reemplaza los canales oficiales de emergencia.", "ARGOS is an informational support prototype: prioritizing where to look does not replace official emergency channels.")}
+          {tr("Es el departamento con mayor probabilidad estimada de al menos un foco en los próximos 7 días", "It is the department with the highest estimated probability of at least one hotspot in the next 7 days")} ({pctTxt(top.probabilidad)}%).{" "}
+          {tr("ARGOS es un prototipo de apoyo informativo: priorizar dónde mirar no reemplaza los canales oficiales de emergencia.", "ARGOS is an informational support prototype: prioritizing where to look does not replace official emergency channels.")}
         </p>
         <div className="gl-botones">
           <Link href="/mapa" className="gl-btn">{tr("Ver el mapa", "View the map")}</Link>
@@ -92,7 +92,7 @@ export default function Inicio() {
         </div>
       </section>
 
-      <section className="gl-forecast" aria-label={tr("Escala de alerta y evolucion de la probabilidad", "Alert scale and probability trend")}>
+      <section className="gl-forecast" aria-label={tr("Escala de alerta y evolución de la probabilidad", "Alert scale and probability trend")}>
         <div className="gl-temps">
           {BANDAS.map((x, i) => {
             const e = esc.find((y) => y.banda === x.id);
@@ -114,7 +114,7 @@ export default function Inicio() {
         {serie.length >= 5 && <div className="gl-days">
           {etiquetas.map((d, i) => <span key={d} className={i === etiquetas.length - 1 ? "on" : ""}>{f(d)}</span>)}
         </div>}
-        <p className="gl-cap">{tr("Escala de 7 niveles con la frecuencia de focos que se observo en cada uno, medida en datos que el modelo no vio. La probabilidad por departamento es una estimacion: sobre 90% se muestra como tope.", "7-level scale with the hotspot frequency observed at each level, measured on data the model did not see. Department probability is an estimate: above 90% is shown as a cap.")}</p>
+        <p className="gl-cap">{tr("Escala de 7 niveles con la frecuencia de focos que se observo en cada uno, medida en datos que el modelo no vio. La probabilidad por departamento es una estimación: sobre 90% se muestra como tope.", "7-level scale with the hotspot frequency observed at each level, measured on data the model did not see. Department probability is an estimate: above 90% is shown as a cap.")}</p>
       </section>
 
       <aside className="gl-rail">
@@ -124,7 +124,7 @@ export default function Inicio() {
           <div className="gl-metrics">
             <div><b>{bl(top.banda)}</b><small>{tr("nivel", "level")}</small></div>
             <div><b>{num(top.n_celdas)}</b><small>{tr("celdas", "cells")}</small></div>
-            <div><b>{recientes == null ? tr("s/d", "n/a") : num(recientes)}</b><small>{tr("focos 3 dias (provincia)", "hotspots 3 days (province)")}</small></div>
+            <div><b>{recientes == null ? tr("s/d", "n/a") : num(recientes)}</b><small>{tr("focos 3 días (provincia)", "hotspots 3 days (province)")}</small></div>
           </div>
         </div>
         {hoy.slice(1, 4).map((d) => {
@@ -136,8 +136,8 @@ export default function Inicio() {
             </div>
           );
         })}
-        {desactualizada && <p className="gl-warn">{tr("Prediccion desactualizada: el riesgo no se recalculo con los datos satelitales mas recientes.", "Outdated prediction: risk was not recalculated with the latest satellite data.")}</p>}
-        <p className="gl-cap">{tr("Prediccion al", "Prediction as of")} {fechaHoy ? fechaCorta(fechaHoy + "T12:00:00Z") : tr("s/d", "n/a")}{ultimo ? `. ${tr("Ultimo foco recibido", "Latest hotspot received")}: ${fechaCorta(ultimo)}` : ""}.</p>
+        {desactualizada && <p className="gl-warn">{tr("Predicción desactualizada: el riesgo no se recalculó con los datos satelitales más recientes.", "Outdated prediction: risk was not recalculated with the latest satellite data.")}</p>}
+        <p className="gl-cap">{tr("Predicción al", "Prediction as of")} {fechaHoy ? fechaCorta(fechaHoy + "T12:00:00Z") : tr("s/d", "n/a")}{ultimo ? `. ${tr("Último foco recibido", "Latest hotspot received")}: ${fechaCorta(ultimo)}` : ""}.</p>
       </aside>
     </div>
   );

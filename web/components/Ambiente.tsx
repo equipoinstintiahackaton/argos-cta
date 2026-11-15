@@ -32,7 +32,7 @@ export default function Ambiente() {
   const et = (f: string) => f.slice(8, 10) + "/" + f.slice(5, 7);
 
   if (error) return <div className="msg">{error}</div>;
-  if (!hoy) return <p className="nota">{tr("Todavia no hay clima cargado.", "No weather data loaded yet.")}</p>;
+  if (!hoy) return <p className="nota">{tr("Todavía no hay clima cargado.", "No weather data loaded yet.")}</p>;
 
   return (
     <>
@@ -40,20 +40,20 @@ export default function Ambiente() {
         <label>{tr("Zona", "Area")}: <select value={depto} onChange={(e) => setDepto(e.target.value)}>
           <option value={TODA}>{tr("Toda la provincia", "Whole province")}</option>{deptos.map((d) => <option key={d}>{d}</option>)}
         </select></label>
-        {" "}<span className="nota">{tr("Datos NASA POWER al", "NASA POWER data as of")} {hoy.fecha.split("-").reverse().join("/")}. {tr("El clima se publica con 3 a 5 dias de retraso.", "Weather is published with a 3 to 5 day delay.")}</span>
+        {" "}<span className="nota">{tr("Datos NASA POWER al", "NASA POWER data as of")} {hoy.fecha.split("-").reverse().join("/")}. {tr("El clima se publica con 3 a 5 días de retraso.", "Weather is published with a 3 to 5 day delay.")}</span>
       </div>
       <div className="grid4">
         <div className="bloque"><h3>{tr("Temperatura", "Temperature")}</h3><div className="v">{num(hoy.temp_c, 1)} °C</div>
-          <p>{tr("Maxima", "Max")} {num(hoy.temp_max_c, 1)} °C. {signo(hoy.temp_anom)} °C {tr("respecto de lo normal para la fecha.", "vs normal for the date.")}</p></div>
+          <p>{tr("Máxima", "Max")} {num(hoy.temp_max_c, 1)} °C. {signo(hoy.temp_anom)} °C {tr("respecto de lo normal para la fecha.", "vs normal for the date.")}</p></div>
         <div className="bloque"><h3>{tr("Viento", "Wind")}</h3><div className="v">{num(hoy.viento_kmh, 1)} km/h</div>
-          <p>{tr("Promedio del dia en una grilla de ~50 km. No incluye rafagas ni direccion.", "Daily mean on a ~50 km grid. Gusts and direction not included.")}</p></div>
+          <p>{tr("Promedio del día en una grilla de ~50 km. No incluye rafagas ni dirección.", "Daily mean on a ~50 km grid. Gusts and direction not included.")}</p></div>
         <div className="bloque"><h3>{tr("Humedad relativa", "Relative humidity")}</h3><div className="v">{num(hoy.humedad_pct, 0)} %</div>
-          <p>{signo(hoy.humedad_anom, 0)} {tr("puntos respecto de lo normal. Deficit de vapor", "points vs normal. Vapor pressure deficit")} {num(hoy.vpd_kpa, 2)} kPa {tr("(mayor es aire mas seco).", "(higher means drier air).")}</p></div>
+          <p>{signo(hoy.humedad_anom, 0)} {tr("puntos respecto de lo normal. Déficit de vapor", "points vs normal. Vapor pressure deficit")} {num(hoy.vpd_kpa, 2)} kPa {tr("(mayor es aire más seco).", "(higher means drier air).")}</p></div>
         <div className="bloque"><h3>{tr("Precipitaciones", "Precipitation")}</h3><div className="v">{num(hoy.precip_mm, 1)} mm</div>
-          <p>{num(hoy.precip_30d, 0)} {tr("mm en 30 dias.", "mm in 30 days.")} {num(hoy.dias_sin_lluvia, 0)} {tr("dias seguidos sin lluvia.", "consecutive days without rain.")}</p></div>
+          <p>{num(hoy.precip_30d, 0)} {tr("mm en 30 días.", "mm in 30 days.")} {num(hoy.dias_sin_lluvia, 0)} {tr("días seguidos sin lluvia.", "consecutive days without rain.")}</p></div>
       </div>
       <div className="grid3" style={{ marginTop: 14 }}>
-        <div><h3 className="h3">{tr("Temperatura maxima, ultimos dias (°C)", "Max temperature, last days (°C)")}</h3>
+        <div><h3 className="h3">{tr("Temperatura máxima, últimos días (°C)", "Max temperature, last days (°C)")}</h3>
           <Barras datos={serie.map((s) => ({ etiqueta: et(s.fecha), valor: s.temp_max_c ?? 0 }))} alto={90} /></div>
         <div><h3 className="h3">{tr("Humedad relativa (%)", "Relative humidity (%)")}</h3>
           <Barras datos={serie.map((s) => ({ etiqueta: et(s.fecha), valor: s.humedad_pct ?? 0 }))} color="#AEB6BD" alto={90} /></div>
