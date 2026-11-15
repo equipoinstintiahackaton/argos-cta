@@ -64,6 +64,8 @@ export default function Inicio() {
 
   const top = hoy[0];
   const b = infoBanda(top.banda);
+  const pctTxt = (p: number) => (p > 0.9 ? "mas de 90" : num(p * 100));
+  const desactualizada = !!(fechaHoy && ultimo && (new Date(ultimo).getTime() - new Date(fechaHoy + "T00:00:00Z").getTime()) / 86400000 > 2);
   const max = Math.max(0.05, ...serie) * 1.1;
   const c = curva(serie, max);
   const etiquetas = dias.length > 6 ? dias.filter((_, i) => i % Math.ceil(dias.length / 6) === 0) : dias;
@@ -78,7 +80,7 @@ export default function Inicio() {
           <span className="gl-ln"><span>en {top.departamento}</span></span>
         </h1>
         <p className="gl-blurb">
-          Es el departamento con mayor probabilidad estimada de al menos un foco en los proximos 7 dias ({num(top.probabilidad * 100)}%).
+          Es el departamento con mayor probabilidad estimada de al menos un foco en los proximos 7 dias ({pctTxt(top.probabilidad)}%).
           ARGOS es un prototipo de apoyo informativo: priorizar donde mirar no reemplaza los canales oficiales de emergencia.
         </p>
         <div className="gl-botones">
@@ -99,27 +101,27 @@ export default function Inicio() {
             );
           })}
         </div>
-        <svg viewBox="0 0 835 230" preserveAspectRatio="none" className="gl-chart" aria-hidden="true">
+        {serie.length >= 5 && <svg viewBox="0 0 835 230" preserveAspectRatio="none" className="gl-chart" aria-hidden="true">
           <defs>
             <linearGradient id="wf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#FF702E" stopOpacity=".42" /><stop offset="1" stopColor="#FF702E" stopOpacity="0" /></linearGradient>
           </defs>
           <path className="gl-fill" d={c.area} fill="url(#wf)" />
           <path className="gl-line" d={c.linea} fill="none" stroke="#FF813C" strokeWidth="3.4" pathLength={1} />
-        </svg>
-        <div className="gl-days">
+        </svg>}
+        {serie.length >= 5 && <div className="gl-days">
           {etiquetas.map((d, i) => <span key={d} className={i === etiquetas.length - 1 ? "on" : ""}>{f(d)}</span>)}
-        </div>
-        <p className="gl-cap">Probabilidad maxima departamental, ultimos {dias.length} dias con prediccion. Debajo del titulo: escala de 7 niveles con la frecuencia de focos observada en datos que el modelo no vio.</p>
+        </div>}
+        <p className="gl-cap">Escala de 7 niveles con la frecuencia de focos que se observo en cada uno, medida en datos que el modelo no vio. La probabilidad por departamento es una estimacion: sobre 90% se muestra como tope.</p>
       </section>
 
       <aside className="gl-rail">
         <div className="gl-card big">
           <span className="gl-place">{top.departamento}</span>
-          <div className="gl-bigtemp">{num(top.probabilidad * 100)}<i>%</i></div>
+          <div className="gl-bigtemp" style={top.probabilidad > 0.9 ? { fontSize: 44, letterSpacing: -1 } : undefined}>{top.probabilidad > 0.9 ? ">90" : num(top.probabilidad * 100)}<i>%</i></div>
           <div className="gl-metrics">
             <div><b>{b.label}</b><small>nivel</small></div>
             <div><b>{num(top.n_celdas)}</b><small>celdas</small></div>
-            <div><b>{recientes == null ? "s/d" : num(recientes)}</b><small>focos 3 dias</small></div>
+            <div><b>{recientes == null ? "s/d" : num(recientes)}</b><small>focos 3 dias (provincia)</small></div>
           </div>
         </div>
         {hoy.slice(1, 4).map((d) => {
@@ -127,10 +129,11 @@ export default function Inicio() {
           return (
             <div key={d.departamento} className="gl-card row">
               <div><small>Catamarca</small><b>{d.departamento}</b><span style={{ color: bb.id === "negro" ? "#fff" : bb.color }}>{bb.label}</span></div>
-              <div className="gl-t">{num(d.probabilidad * 100)}<i>%</i></div>
+              <div className="gl-t">{d.probabilidad > 0.9 ? ">90" : num(d.probabilidad * 100)}<i>%</i></div>
             </div>
           );
         })}
+        {desactualizada && <p className="gl-warn">Prediccion desactualizada: el riesgo no se recalculo con los datos satelitales mas recientes.</p>}
         <p className="gl-cap">Prediccion al {fechaHoy ? fechaCorta(fechaHoy + "T12:00:00Z") : "s/d"}{ultimo ? `. Ultimo foco recibido: ${fechaCorta(ultimo)}` : ""}.</p>
       </aside>
     </div>

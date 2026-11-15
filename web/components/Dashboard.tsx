@@ -32,6 +32,7 @@ export default function Dashboard({ embebido = false }: { embebido?: boolean }) 
   const [tab, setTab] = useState<"alertas" | "deptos">("alertas");
   const [error, setError] = useState<string | null>(null);
   const [listo, setListo] = useState(false);
+  const [panelAbierto, setPanelAbierto] = useState(true);
 
   // 1) Datos que no dependen de la fecha
   useEffect(() => {
@@ -88,8 +89,9 @@ export default function Dashboard({ embebido = false }: { embebido?: boolean }) 
     (async () => {
       const L = (await import("leaflet")).default;
       if (!vivo || !mapaRef.current || mapRef.current) return;
-      const map = L.map(mapaRef.current).setView([-27.5, -66.9], 7);
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { attribution: "&copy; OpenStreetMap" }).addTo(map);
+      const map = L.map(mapaRef.current, { zoomControl: false }).setView([-27.5, -66.9], 7);
+      L.control.zoom({ position: "bottomleft" }).addTo(map);
+      L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", { attribution: "&copy; OpenStreetMap &copy; CARTO", subdomains: "abcd", maxZoom: 19 }).addTo(map);
       mapRef.current = map;
       setListo(true);
     })();
@@ -119,7 +121,7 @@ export default function Dashboard({ embebido = false }: { embebido?: boolean }) 
         for (const d of deptos) {
           const r = porDepto[d.nombre];
           const b = infoBanda(r?.banda);
-          L.geoJSON(d.geojson, { style: { color: "#111827", weight: 1.2, fillColor: b.color, fillOpacity: 0.55 } })
+          L.geoJSON(d.geojson, { style: { color: "#cbd5e1", weight: 1.2, fillColor: b.color, fillOpacity: 0.55 } })
             .bindPopup(`<b>${d.nombre}</b><br/>Probabilidad de al menos un foco en 7 dias: ${r ? (r.probabilidad * 100).toFixed(0) + "%" : "s/d"}<br/>Nivel: ${b.label}`)
             .addTo(g);
         }
@@ -127,7 +129,7 @@ export default function Dashboard({ embebido = false }: { embebido?: boolean }) 
       }
       if (capa === "celdas" && deptos.length) {
         const c = L.layerGroup();
-        for (const d of deptos) L.geoJSON(d.geojson, { style: { color: "#334155", weight: 1.2, fill: false }, interactive: false }).addTo(c);
+        for (const d of deptos) L.geoJSON(d.geojson, { style: { color: "#94a3b8", weight: 1.2, fill: false }, interactive: false }).addTo(c);
         c.addTo(map); capasRef.current.push(c);
       }
     })();
@@ -142,7 +144,7 @@ export default function Dashboard({ embebido = false }: { embebido?: boolean }) 
       if (!verFocos || focosRec.length === 0) return;
       const g = L.layerGroup();
       for (const f of focosRec) {
-        L.circleMarker([f.lat, f.lon], { radius: 4, color: "#ffffff", weight: 1, fillColor: "#111827", fillOpacity: 0.95 })
+        L.circleMarker([f.lat, f.lon], { radius: 5, color: "#FF702E", weight: 2, fillColor: "#ffffff", fillOpacity: 0.95 })
           .bindPopup(`<b>Foco satelital</b><br/>${f.ts_utc.slice(0, 16).replace("T", " ")} UTC<br/>${f.instrumento} (${f.satelite})<br/>Confianza: ${f.confianza_cat}<br/>FRP: ${f.frp_mw ?? "s/d"} MW`)
           .addTo(g);
       }
@@ -161,11 +163,13 @@ export default function Dashboard({ embebido = false }: { embebido?: boolean }) 
       <div className="mapawrap">
         <div ref={mapaRef} className="mapa" />
         <div className="capas">
-          <button className={capa === "celdas" ? "on" : ""} onClick={() => setCapa("celdas")}>Celdas (indice)</button>
-          <button className={capa === "deptos" ? "on" : ""} onClick={() => setCapa("deptos")}>Departamentos (probabilidad)</button>
+          <button className={capa === "celdas" ? "on" : ""} onClick={() => setCapa("celdas")}>Celdas</button>
+          <button className={capa === "deptos" ? "on" : ""} onClick={() => setCapa("deptos")}>Departamentos</button>
         </div>
+        <button className={"panel-toggle" + (panelAbierto ? "" : " visible")} onClick={() => setPanelAbierto(true)}>Mostrar panel</button>
       </div>
-      <aside className="panel">
+      <aside className={"panel" + (panelAbierto ? "" : " cerrado")}>
+        <button className="panel-cerrar" onClick={() => setPanelAbierto(false)}>Ocultar</button>
         <div className="fechabar">
           <select value={fecha ?? ""} onChange={(e) => setFecha(e.target.value)}>
             {fechas.map((f) => <option key={f} value={f}>{f}</option>)}
@@ -208,7 +212,7 @@ export default function Dashboard({ embebido = false }: { embebido?: boolean }) 
           return (
             <div key={a.h3_cell} className="alerta" style={{ borderLeftColor: b.color }} onClick={() => ir(a.h3_cell)}>
               <div className="top"><span>{b.label.toUpperCase()}</span><span>indice {a.indice ?? "s/d"}</span></div>
-              <div className="motivo">{a.motivo}</div>
+              <div className="motivo">{(a.motivo ?? "").split("; ").slice(0, 2).join(". ")}</div>
             </div>
           );
         })}
@@ -224,8 +228,8 @@ export default function Dashboard({ embebido = false }: { embebido?: boolean }) 
         })}
 
         {escala.length > 0 && (
-          <>
-            <h3 className="h3">Que paso realmente en cada banda</h3>
+          <details>
+            <summary>Que paso realmente en cada banda</summary>
             <table className="tabla">
               <thead><tr><th>Banda</th><th>Celdas-dia</th><th>Con fuego en 7 d</th><th>x base</th></tr></thead>
               <tbody>
@@ -238,7 +242,7 @@ export default function Dashboard({ embebido = false }: { embebido?: boolean }) 
               </tbody>
             </table>
             <p className="nota">Medido en datos que el modelo nunca vio (2024 en adelante).</p>
-          </>
+          </details>
         )}
 
         <p className="aviso">

@@ -243,3 +243,42 @@ a:focus-visible, button:focus-visible { outline: 2px solid #fff; outline-offset:
   .gl-rail { grid-column: 1; grid-row: auto; }
   .gl-btn { padding: 12px 20px; }
 }
+
+/* landing: imagenes en tarjetas */
+.land .tarjeta img { display: block; width: 100%; height: 190px; object-fit: cover; border-radius: 8px; margin-bottom: 16px; }
+.land .tarjeta img.claro { object-fit: contain; background: #fff; }
+.gl-warn { margin-top: 6px; padding: 10px 12px; border-radius: 12px; background: rgba(120,80,20,.55); border: 1px solid rgba(244,211,155,.5); color: #f4d39b; font-size: 12px; line-height: 1.5; }
+a.tel { text-decoration: none; }
+
+/* ======== Mapa de riesgo: glass ======== */
+.gl-main .app.embebido { position: relative; display: block; border: 0; border-radius: 22px; overflow: hidden; background: #0b0d0f; }
+.gl-main .app.embebido .mapawrap { position: absolute; inset: 0; }
+.gl-main .app.embebido .leaflet-container { background: #0b0d0f; font-family: Arial, sans-serif; }
+.gl-main .app.embebido .capas { top: 14px; left: 14px; right: auto; gap: 0; padding: 4px; border-radius: 999px; background: rgba(255,255,255,.14); backdrop-filter: blur(18px) saturate(115%); -webkit-backdrop-filter: blur(18px) saturate(115%); border: 1px solid rgba(255,255,255,.16); }
+.gl-main .app.embebido .capas button { border: 0; background: transparent; color: #fff; padding: 8px 16px; border-radius: 999px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.gl-main .app.embebido .capas button.on { background: var(--argos-secondary); }
+.gl-main .app.embebido .panel { position: absolute; z-index: 1000; top: 14px; right: 14px; bottom: 14px; width: 390px; padding: 18px; border: 1px solid rgba(255,255,255,.16); border-radius: 22px; background: linear-gradient(180deg, rgba(25,30,35,.78), rgba(25,30,35,.7)); backdrop-filter: blur(26px) saturate(118%); -webkit-backdrop-filter: blur(26px) saturate(118%); transition: transform .4s var(--gl-e-out), opacity .3s; scrollbar-width: thin; }
+.gl-main .app.embebido .panel.cerrado { transform: translateX(calc(100% + 30px)); opacity: 0; pointer-events: none; }
+.panel-toggle { position: absolute; z-index: 1001; top: 14px; right: 14px; display: none; background: rgba(255,255,255,.14); backdrop-filter: blur(18px); border: 1px solid rgba(255,255,255,.16); color: #fff; border-radius: 999px; padding: 9px 16px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.panel-toggle.visible { display: block; }
+.panel-cerrar { float: right; background: transparent; border: 1px solid rgba(255,255,255,.25); color: #fff; border-radius: 999px; padding: 4px 11px; font-size: 12px; cursor: pointer; }
+.gl-main .app.embebido .leyenda { gap: 5px; }
+.gl-main .app.embebido .lchip { border: 0; border-radius: 9px; padding: 7px 2px; }
+.gl-main .app.embebido .tabs { padding: 4px; border-radius: 999px; background: rgba(255,255,255,.08); }
+.gl-main .app.embebido .tabs button { flex: 1; border: 0; background: transparent; color: #fff; padding: 8px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; cursor: pointer; }
+.gl-main .app.embebido .tabs button.on { background: var(--argos-secondary); }
+.gl-main .app.embebido .alerta { border: 0; border-left: 4px solid; border-radius: 12px; padding: 10px 12px; background: rgba(255,255,255,.07); }
+.gl-main .app.embebido .alerta:hover { background: rgba(255,255,255,.13); }
+.gl-main .app.embebido .alerta .motivo { font-size: 12px; line-height: 1.45; }
+.gl-main .app.embebido details { margin-top: 12px; }
+.gl-main .app.embebido summary { cursor: pointer; color: var(--argos-light); font-size: 13px; font-weight: 600; padding: 6px 0; }
+.gl-main .app.embebido .leaflet-popup-content-wrapper, .gl-main .app.embebido .leaflet-popup-tip { background: rgba(25,30,35,.95); color: #fff; border-radius: 12px; }
+.gl-main .app.embebido .leaflet-bar a { background: rgba(255,255,255,.14); color: #fff; border-color: rgba(255,255,255,.18); backdrop-filter: blur(12px); }
+.gl-main .app.embebido .leaflet-control-attribution { background: rgba(0,0,0,.5); color: #aaa; }
+.gl-main .app.embebido .leaflet-control-attribution a { color: #ccc; }
+@media (max-width: 860px) {
+  .gl-main .app.embebido .panel { left: 10px; right: 10px; top: auto; bottom: 10px; width: auto; max-height: 55%; }
+  .gl-main .app.embebido .capas { left: 10px; top: 10px; }
+  .gl-main .app.embebido .capas button { padding: 7px 11px; font-size: 12px; }
+  .panel-toggle { top: 60px; right: 10px; }
+}

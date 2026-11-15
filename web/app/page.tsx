@@ -52,9 +52,9 @@ export default function Landing() {
           <h2 className="titulo">Los incendios en Catamarca</h2>
           <p className="descripcion">Conoce el impacto de los incendios forestales en la provincia y su evolucion a lo largo de los años.</p>
           <div className="contenedor">
-            <div className="tarjeta"><h3>🌎 Medio ambiente</h3><p>Comprender como los incendios afectan las sierras, los valles y los bosques de Catamarca.</p></div>
-            <div className="tarjeta"><h3>🛰️ Tecnologia NASA</h3><p>Usamos informacion satelital (MODIS, VIIRS y proximamente GOES-19) para estudiar los focos de calor en el territorio.</p></div>
-            <div className="tarjeta"><h3>📊 Datos historicos</h3><p>Trece años de detecciones depuradas y un modelo que estima donde es mas probable que aparezcan focos en los proximos 7 dias.</p></div>
+            <div className="tarjeta"><img src="/medio-ambiente.jpg" alt="Paisaje de la puna catamarqueña" /><h3>Medio ambiente</h3><p>Comprender como los incendios afectan las sierras, los valles y los bosques de Catamarca.</p></div>
+            <div className="tarjeta"><img src="/tecnologia-nasa.jpg" alt="Satelite GOES en orbita" /><h3>Tecnologia NASA</h3><p>Usamos informacion satelital (MODIS, VIIRS y proximamente GOES-19) para estudiar los focos de calor en el territorio.</p></div>
+            <div className="tarjeta"><img className="claro" src="/datos-historicos.jpg" alt="Mapa de Catamarca con departamentos y localidades" /><h3>Datos historicos</h3><p>Trece años de detecciones depuradas y un modelo que estima donde es mas probable que aparezcan focos en los proximos 7 dias.</p></div>
           </div>
         </section>
 
@@ -64,7 +64,7 @@ export default function Landing() {
           <div className="mapa-caja mapa-sat">
             <img src="/catamarca-satelital.jpg" alt="Mapa satelital de la provincia de Catamarca" />
             <div>
-              <h3>🗺️ Mapa interactivo de Catamarca</h3>
+              <h3>Mapa interactivo de Catamarca</h3>
               <p>Explora la distribucion de los focos de calor y el riesgo estimado en los 16 departamentos.</p>
               <div className="deptos">{DEPTOS.map((d) => <span key={d}>{d}</span>)}</div>
               <Link href="/login" className="boton">Abrir el mapa</Link>

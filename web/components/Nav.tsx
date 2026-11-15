@@ -30,7 +30,6 @@ export default function Nav({ activo }: { activo?: Activo }) {
         <img src="/logo-icon.png" alt="ARGOS" />
         <div>
           <span className="marca-n">ARGOS</span>
-          <span className="marca-s">ALERTA DE RIESGO GEOESPACIAL Y OBSERVACION SATELITAL</span>
         </div>
       </Link>
       <nav className="menu">
