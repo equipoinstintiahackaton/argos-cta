@@ -26,7 +26,7 @@ export default function Landing() {
   return (
     <>
       <Nav activo="inicio" />
-      <div className="pagina">
+      <div className="land">
         <section className="hero">
           <div>
             <h1>ARGOS</h1>
@@ -49,32 +49,33 @@ export default function Landing() {
           <div className="kpi"><b style={{ fontSize: 18 }}>{ultimo ? fecha(ultimo) : "s/d"}</b><span>ultimo foco satelital recibido</span></div>
         </div>
 
-        <section className="card" id="incendios">
-          <h2>Los incendios en Catamarca</h2>
-          <p className="nota">Conoce el impacto de los incendios forestales en la provincia y su evolucion a lo largo de los años.</p>
-          <div className="grid3" style={{ marginTop: 12 }}>
+        <section className="lsec" id="incendios">
+          <h2 className="titulo">Los incendios en Catamarca</h2>
+          <p className="descripcion">Conoce el impacto de los incendios forestales en la provincia y su evolucion a lo largo de los años.</p>
+          <div className="contenedor">
             <div className="tarjeta"><h3>🌎 Medio ambiente</h3><p>Comprender como los incendios afectan las sierras, los valles y los bosques de Catamarca.</p></div>
             <div className="tarjeta"><h3>🛰️ Tecnologia NASA</h3><p>Usamos informacion satelital (MODIS, VIIRS y proximamente GOES-19) para estudiar los focos de calor en el territorio.</p></div>
             <div className="tarjeta"><h3>📊 Datos historicos</h3><p>Trece años de detecciones depuradas y un modelo que estima donde es mas probable que aparezcan focos en los proximos 7 dias.</p></div>
           </div>
         </section>
 
-        <section className="card" id="mapas">
-          <h2>Mapa de incendios de Catamarca</h2>
-          <div className="mapa-sat">
+        <section className="lsec" id="mapas">
+          <h2 className="titulo">Mapa de incendios de Catamarca</h2>
+          <p className="descripcion">Explora la distribucion geografica de los focos de calor registrados en los 16 departamentos de Catamarca.</p>
+          <div className="mapa-caja mapa-sat">
             <img src="/catamarca-satelital.jpg" alt="Mapa satelital de la provincia de Catamarca" />
             <div>
-              <h3 className="h3">🗺️ Mapa interactivo de Catamarca</h3>
-              <p className="nota">Explora la distribucion de los focos de calor y el riesgo estimado en los 16 departamentos.</p>
+              <h3>🗺️ Mapa interactivo de Catamarca</h3>
+              <p>Explora la distribucion de los focos de calor y el riesgo estimado en los 16 departamentos.</p>
               <div className="deptos">{DEPTOS.map((d) => <span key={d}>{d}</span>)}</div>
               <Link href="/dashboard#mapa" className="boton">Abrir el mapa</Link>
             </div>
           </div>
         </section>
 
-        <section className="card" id="proyecto">
-          <h2>Sobre ARGOS</h2>
-          <p className="nota">
+        <section className="lsec" id="proyecto">
+          <h2 className="titulo">Sobre ARGOS</h2>
+          <p className="descripcion">
             ARGOS (Alerta de Riesgo Geoespacial y Observacion Satelital) es el proyecto de un equipo catamarqueño participante del
             NASA Space Apps Challenge. Nuestro objetivo es usar la tecnologia y los datos satelitales para comprender mejor los
             incendios forestales en Catamarca y generar conciencia ambiental en toda la provincia. ARGOS prioriza donde mirar:
