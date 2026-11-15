@@ -35,7 +35,7 @@ export default function Login() {
       <div className="pagina">
         <section className="card login">
           <h2>Ingresar a <span className="acento">ARGOS</span></h2>
-          <p className="nota">Acceso para bomberos, brigadistas y organismos de emergencia. Las cuentas las crea el administrador. El dashboard y el registro tambien se pueden ver sin ingresar.</p>
+          <p className="nota">Acceso para bomberos, brigadistas y organismos de emergencia. Las cuentas las crea el administrador.</p>
           <form onSubmit={entrar}>
             <label>Correo electronico
               <input type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
@@ -46,7 +46,12 @@ export default function Login() {
             {error && <div className="msg" style={{ padding: 0 }}>{error}</div>}
             <button type="submit" className="boton" disabled={cargando}>{cargando ? "Ingresando..." : "Ingresar"}</button>
           </form>
-          <p className="nota" style={{ marginTop: 14 }}><Link href="/dashboard">Continuar sin ingresar</Link></p>
+          <div className="aviso-pagina" style={{ marginTop: 16 }}>
+            <strong>Cuenta demo</strong> (para evaluar la plataforma)<br />
+            Correo: <code>demo@argos.com</code><br />
+            Contraseña: <code>argos2026</code>
+          </div>
+          <p className="nota" style={{ marginTop: 14 }}><Link href="/">Volver al inicio</Link></p>
         </section>
       </div>
       <Pie />

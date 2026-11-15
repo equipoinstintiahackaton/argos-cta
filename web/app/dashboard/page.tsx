@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Nav from "../../components/Nav";
+import Protegido from "../../components/Protegido";
 import Pie from "../../components/Pie";
 import Dashboard from "../../components/Dashboard";
 import Ambiente from "../../components/Ambiente";
@@ -9,7 +10,7 @@ import UltimosIncendios from "../../components/UltimosIncendios";
 import { contar, ultimaFechaAlertas, ultimoFoco } from "../../lib/resumen";
 import { fecha, num } from "../../lib/formato";
 
-export default function DashboardPage() {
+function Contenido() {
   const [recientes, setRecientes] = useState<number | null>(null);
   const [ultimo, setUltimo] = useState<string | null>(null);
   const [alertas, setAlertas] = useState<number | null>(null);
@@ -85,5 +86,13 @@ export default function DashboardPage() {
       </div>
       <Pie />
     </>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Protegido>
+      <Contenido />
+    </Protegido>
   );
 }
