@@ -290,7 +290,7 @@ a.tel { text-decoration: none; }
 .glass { background: rgba(255,255,255,.01); background-blend-mode: luminosity; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); box-shadow: inset 0 1px 1px rgba(255,255,255,.1); position: relative; overflow: hidden; }
 .glass::before { content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1.4px; background: linear-gradient(180deg, rgba(255,255,255,.45) 0%, rgba(255,255,255,.15) 20%, rgba(255,255,255,0) 40%, rgba(255,255,255,0) 60%, rgba(255,255,255,.15) 80%, rgba(255,255,255,.45) 100%); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none; }
 .lp-hero { position: relative; min-height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-.lp-hero-bg { position: absolute; inset: 0; background: var(--argos-background) url('/catamarca-satelital.jpg') center bottom / cover no-repeat; opacity: 0; animation: lp-fadein 1.4s ease .2s forwards, lp-zoom 30s ease-in-out infinite alternate; }
+.lp-hero-bg { position: absolute; inset: 0; background: var(--argos-background) url('/catamarca-satelital.jpg') center center / auto 100% no-repeat; opacity: 0; animation: lp-fadein 1.4s ease .2s forwards, lp-zoom 30s ease-in-out infinite alternate; }
 .lp-hero-velo { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(16,19,22,.6) 0%, rgba(16,19,22,.4) 40%, #101316 100%); }
 .lp-nav { position: relative; z-index: 3; max-width: 1024px; width: calc(100% - 48px); margin: 24px auto 0; padding: 12px 24px; border-radius: 999px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .lp-marca { display: flex; align-items: center; gap: 10px; color: #fff; text-decoration: none; font-weight: 700; font-size: 18px; letter-spacing: 2px; }
@@ -358,3 +358,10 @@ a.tel { text-decoration: none; }
   .lp-filo-grid, .lp-serv-grid { grid-template-columns: 1fr; }
   .lp-marco-pie { padding: 20px; } .lp-sec-about { padding-top: 90px; }
 }
+
+/* featured: mapa satelital centrado sobre fondo difuminado */
+.lp-marco { background: var(--argos-surface); }
+.lp-marco-fondo { position: absolute; inset: -20px; background-size: cover; background-position: center; filter: blur(24px) brightness(.55); }
+.lp-marco img.lp-marco-img { position: absolute; top: 0; bottom: 0; left: 50%; width: auto; height: 100%; max-width: 100%; transform: translateX(-50%); object-fit: contain; }
+.gl-main .app.embebido .mapa.base-osm .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(.85) contrast(.9) saturate(.6); }
+@media (max-width: 860px) { .lp-hero-bg { background-size: cover; background-position: center; } }

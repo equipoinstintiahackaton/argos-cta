@@ -67,7 +67,8 @@ export default function Landing() {
       <section className="lp-destacado" id="enfoque">
         <Reveal>
           <div className="lp-marco">
-            <img src="/medio-ambiente.jpg" alt="Paisaje de la puna catamarqueña" />
+            <div className="lp-marco-fondo" style={{ backgroundImage: "url(/catamarca-landsat.jpg)" }} aria-hidden="true" />
+            <img className="lp-marco-img" src="/catamarca-landsat.jpg" alt="Imagen satelital de la provincia de Catamarca y sus limites" />
             <div className="lp-marco-velo" aria-hidden="true" />
             <div className="lp-marco-pie">
               <div className="glass lp-tarjeta-g">

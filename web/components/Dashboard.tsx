@@ -91,7 +91,16 @@ export default function Dashboard({ embebido = false }: { embebido?: boolean }) 
       if (!vivo || !mapaRef.current || mapRef.current) return;
       const map = L.map(mapaRef.current, { zoomControl: false }).setView([-27.5, -66.9], 7);
       L.control.zoom({ position: "bottomleft" }).addTo(map);
-      L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", { attribution: "&copy; OpenStreetMap &copy; CARTO", subdomains: "abcd", maxZoom: 19 }).addTo(map);
+      // Mapa base oscuro sin clave (Esri). Si fallan los mosaicos, se cae a OpenStreetMap oscurecido por CSS.
+      const esri = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}", { attribution: "Tiles &copy; Esri, HERE, Garmin, OpenStreetMap", maxZoom: 16 }).addTo(map);
+      const etq = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}", { maxZoom: 16, pane: "overlayPane" }).addTo(map);
+      let fallos = 0;
+      esri.on("tileerror", () => {
+        if (++fallos < 6) return;
+        esri.remove(); etq.remove();
+        mapaRef.current?.classList.add("base-osm");
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { attribution: "&copy; OpenStreetMap", maxZoom: 19 }).addTo(map);
+      });
       mapRef.current = map;
       setListo(true);
     })();
