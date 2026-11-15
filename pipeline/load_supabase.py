@@ -228,10 +228,22 @@ def cargar_backtest(conn):
     print(f"backtest: {len(df)} filas")
 
 
+def cargar_incendios(conn):
+    ev = pd.read_parquet(config.PROCESSED / "incendios.parquet")
+    cols = ["incendio_id", "inicio", "fin", "duracion_h", "dias_activos", "n_focos", "n_celdas", "lat", "lon",
+            "departamento", "frp_max_mw", "frp_total_mw", "tamano", "prolongado", "anio", "mes", "sensores"]
+    with conn.cursor() as cur:
+        cur.execute("truncate incendios")
+        _ejecutar(cur, "insert into incendios (" + ", ".join(cols) + ") values (" + ", ".join(["%s"] * len(cols)) + ")",
+                  filas(ev[cols]))
+    conn.commit()
+    print(f"incendios: {len(ev)} eventos cargados")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--que", nargs="+", required=True,
-                    choices=["celdas", "departamentos", "focos", "estadisticas", "condiciones", "auditoria", "backtest", "riesgo", "riesgo_depto", "alertas"])
+                    choices=["celdas", "departamentos", "focos", "estadisticas", "condiciones", "auditoria", "backtest", "incendios", "riesgo", "riesgo_depto", "alertas"])
     ap.add_argument("--fecha", help="YYYY-MM-DD (para riesgo y alertas)")
     a = ap.parse_args()
     if any(k in a.que for k in ("riesgo", "riesgo_depto", "alertas")) and not a.fecha:
@@ -258,6 +270,8 @@ def main():
             cargar_auditoria(conn)
         if "backtest" in a.que:
             cargar_backtest(conn)
+        if "incendios" in a.que:
+            cargar_incendios(conn)
         if "riesgo" in a.que:
             cargar_riesgo(conn, a.fecha)
         if "riesgo_depto" in a.que:
